@@ -656,15 +656,423 @@
     .visit-list { max-height: 260px; }
   }
 
-  @media (max-width: 380px) {
+    @media (max-width: 380px) {
     #topbar .bar-title .text { font-size: 13px; }
     .tb-btn { padding: 6px 8px; font-size: 12px; }
+  }
+</style>
+
+<!-- ═══ ERROR BOUNDARY CSS (additive, isolated) ═══ -->
+<style id="error-boundary-css">
+  .eb-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .78);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  .eb-overlay.active { display: flex; }
+
+  .eb-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    color: #e2e8f0;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    direction: inherit;
+  }
+  .eb-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .eb-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .eb-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
+  .eb-sub {
+    font-size: 12.5px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+  .eb-msg {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #e2e8f0;
+    word-break: break-word;
+    margin-bottom: 14px;
+  }
+  .eb-details { margin-top: 10px; }
+  .eb-details summary {
+    cursor: pointer;
+    font-size: 12px;
+    color: #94a3b8;
+    user-select: none;
+    padding: 4px 0;
+  }
+  .eb-details summary:hover { color: #cbd5e1; }
+  .eb-details pre {
+    background: #0f172a;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #cbd5e1;
+    overflow-x: auto;
+    max-height: 240px;
+    margin: 8px 0 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    direction: ltr;
+    text-align: left;
+  }
+  .eb-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .eb-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .eb-btn-primary { background: #3b82f6; color: #fff; }
+  .eb-btn-primary:hover { background: #2563eb; }
+  .eb-btn-ghost {
+    background: transparent;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+  }
+  .eb-btn-ghost:hover { background: #0f172a; border-color: #475569; }
+  .eb-btn-copy { background: transparent; border: 1px solid #334155; color: #94a3b8; }
+  .eb-btn-copy:hover { background: #0f172a; border-color: #475569; color: #cbd5e1; }
+
+    @media (max-width: 560px) {
+    .eb-card { padding: 18px; }
+    .eb-actions { flex-direction: column-reverse; }
+    .eb-btn { width: 100%; justify-content: center; }
+  }
+</style>
+
+<!-- ═══ TOAST CSS (additive, isolated) ═══ -->
+<style id="toast-css">
+  .toast-container {
+    position: fixed;
+    top: calc(var(--header-h) + env(safe-area-inset-top, 0px) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(92vw, 420px);
+    pointer-events: none;
+  }
+  .toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--bg-panel, #1e293b);
+    color: var(--text, #e2e8f0);
+    border: 1px solid var(--border, #334155);
+    border-inline-start: 4px solid #3b82f6;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    font-size: 13px;
+    line-height: 1.5;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Cairo', sans-serif;
+    animation: toastIn .3s cubic-bezier(.2, .9, .3, 1.15);
+  }
+  .toast.removing {
+    animation: toastOut .22s ease-in forwards;
+  }
+  .toast-icon {
+    width: 20px; height: 20px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 700;
+    color: #3b82f6;
+  }
+  .toast-body {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+  }
+  .toast-close {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim, #94a3b8);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: background .15s, color .15s;
+    padding: 0;
+    line-height: 1;
+  }
+  .toast-close:hover { background: var(--bg-dark, #0f172a); color: var(--text, #e2e8f0); }
+  .toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #3b82f6;
+    opacity: .5;
+    transform-origin: left;
+    animation: toastProgress linear forwards;
+  }
+  html[dir="rtl"] .toast-progress { transform-origin: right; }
+
+  .toast.success { border-inline-start-color: #10b981; }
+  .toast.success .toast-icon { color: #10b981; }
+  .toast.success .toast-progress { background: #10b981; }
+
+  .toast.error { border-inline-start-color: #ef4444; }
+  .toast.error .toast-icon { color: #ef4444; }
+  .toast.error .toast-progress { background: #ef4444; }
+
+  .toast.warning { border-inline-start-color: #f59e0b; }
+  .toast.warning .toast-icon { color: #f59e0b; }
+  .toast.warning .toast-progress { background: #f59e0b; }
+
+  .toast.info { border-inline-start-color: #3b82f6; }
+  .toast.info .toast-icon { color: #3b82f6; }
+  .toast.info .toast-progress { background: #3b82f6; }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateY(0);    max-height: 200px; margin-top: 0; }
+    to   { opacity: 0; transform: translateY(-10px); max-height: 0;     margin-top: -8px; }
+  }
+  @keyframes toastProgress {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
   }
 </style>
 </head>
 <body>
 
-  <div id="topbar">
+  <!-- ═══ ERROR BOUNDARY JS (additive, isolated, runs before everything else) ═══ -->
+  <script>
+  (function() {
+    'use strict';
+    let errorCount = 0;
+    const MAX_BEFORE_LOOP_PROMPT = 5;
+
+    function ensureOverlay() {
+      let el = document.getElementById('ebOverlay');
+      if (el) return el;
+
+      el = document.createElement('div');
+      el.id = 'ebOverlay';
+      el.className = 'eb-overlay';
+      el.innerHTML = `
+        <div class="eb-card" role="alertdialog" aria-labelledby="ebTitle">
+          <div class="eb-head">
+            <div class="eb-icon">⚠️</div>
+            <div style="flex:1;min-width:0">
+              <h2 class="eb-title" id="ebTitle">Something went wrong</h2>
+              <div class="eb-sub">The action could not be completed.</div>
+            </div>
+          </div>
+          <div class="eb-msg" id="ebMsg">An unexpected error occurred.</div>
+          <details class="eb-details">
+            <summary>Technical details</summary>
+            <pre id="ebDetail"></pre>
+          </details>
+          <div class="eb-actions">
+            <button class="eb-btn eb-btn-copy" id="ebCopyBtn">📋 Copy</button>
+            <button class="eb-btn eb-btn-ghost" id="ebDismissBtn">Dismiss</button>
+            <button class="eb-btn eb-btn-primary" id="ebReloadBtn">🔄 Reload</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(el);
+
+      el.querySelector('#ebDismissBtn').addEventListener('click', hideOverlay);
+      el.querySelector('#ebReloadBtn').addEventListener('click', () => location.reload());
+      el.querySelector('#ebCopyBtn').addEventListener('click', () => {
+        const text = (document.getElementById('ebMsg').textContent || '') + '\n\n' +
+                    (document.getElementById('ebDetail').textContent || '');
+        const done = () => {
+          const btn = document.getElementById('ebCopyBtn');
+          if (btn) { const o = btn.innerHTML; btn.innerHTML = '✓ Copied'; setTimeout(() => btn.innerHTML = o, 1500); }
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done).catch(done);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); } catch (e) {}
+          document.body.removeChild(ta); done();
+        }
+      });
+
+      el.addEventListener('click', (e) => { if (e.target === el) hideOverlay(); });
+
+      return el;
+    }
+
+    function showOverlay(title, message, details) {
+      errorCount++;
+      if (errorCount >= MAX_BEFORE_LOOP_PROMPT) {
+        message = 'Multiple errors occurred. Reload the page to continue.';
+      }
+      const el = ensureOverlay();
+      el.querySelector('#ebTitle').textContent = title || 'Something went wrong';
+      el.querySelector('#ebMsg').textContent = message || 'An unexpected error occurred.';
+      el.querySelector('#ebDetail').textContent = details || '(no technical details)';
+      el.classList.add('active');
+    }
+
+    function hideOverlay() {
+      const el = document.getElementById('ebOverlay');
+      if (el) el.classList.remove('active');
+    }
+
+    function fmtError(err) {
+      if (!err) return '(no error object)';
+      if (err instanceof Error) {
+        return (err.name || 'Error') + ': ' + err.message + (err.stack ? '\n\n' + err.stack : '');
+      }
+      try { return JSON.stringify(err, null, 2); } catch (e) { return String(err); }
+    }
+
+    window.addEventListener('error', function(event) {
+      const src = event.filename || '';
+      if (/^(chrome|moz|safari|edge)-extension:|^webextension/.test(src)) return;
+      console.error('[error boundary]', event.error || event.message);
+      const details = [
+        'Message: ' + (event.message || ''),
+        'Source: '  + (event.filename || '') + ':' + (event.lineno || '') + ':' + (event.colno || ''),
+        '',
+        fmtError(event.error)
+      ].join('\n');
+      showOverlay('Unexpected error', event.message || 'A JavaScript error occurred.', details);
+    });
+
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('[error boundary] unhandled rejection:', event.reason);
+      showOverlay('Operation failed', (event.reason && event.reason.message) || 'A background operation failed.', fmtError(event.reason));
+    });
+
+      window.__ebShow = showOverlay;
+  window.__ebHide = hideOverlay;
+})();
+</script>
+
+<!-- ═══ TOAST JS (additive, isolated) ═══ -->
+<script>
+(function() {
+  'use strict';
+
+  function ensureContainer() {
+    let el = document.getElementById('toastContainer');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'toastContainer';
+    el.className = 'toast-container';
+    document.body.appendChild(el);
+    return el;
+  }
+
+  const ICONS = { success: '✓', error: '✕', warning: '!', info: 'ℹ' };
+  const DEFAULT_DURATION = { success: 3500, info: 3500, warning: 5000, error: 6500 };
+
+  function showToast(message, type, duration) {
+    type = type || 'info';
+    if (typeof message !== 'string') message = String(message || '');
+    if (!message) return function() {};
+
+    const container = ensureContainer();
+    const ms = (duration != null) ? duration : (DEFAULT_DURATION[type] || 4000);
+
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.setAttribute('role', 'status');
+    toast.innerHTML = `
+      <div class="toast-icon">${ICONS[type] || 'ℹ'}</div>
+      <div class="toast-body"></div>
+      <button class="toast-close" aria-label="Close">×</button>
+      <div class="toast-progress"></div>
+    `;
+    toast.querySelector('.toast-body').textContent = message;
+
+    const progress = toast.querySelector('.toast-progress');
+    progress.style.animationDuration = ms + 'ms';
+
+    let removed = false;
+    function remove() {
+      if (removed) return;
+      removed = true;
+      toast.classList.add('removing');
+      setTimeout(() => toast.remove(), 240);
+    }
+
+    toast.querySelector('.toast-close').addEventListener('click', remove);
+    container.appendChild(toast);
+    setTimeout(remove, ms);
+    return remove;
+  }
+
+  window.__toast = {
+    show:    (msg, type, ms) => showToast(msg, type, ms),
+    success: (msg, ms) => showToast(msg, 'success', ms),
+    error:   (msg, ms) => showToast(msg, 'error', ms),
+    warning: (msg, ms) => showToast(msg, 'warning', ms),
+    info:    (msg, ms) => showToast(msg, 'info', ms),
+  };
+})();
+</script>
+
+<div id="topbar">
+
     <div class="bar-title">
       <div class="logo">🚚</div>
       <div class="text" data-i18n="appTitle">Alameen Tracker</div>
@@ -1307,10 +1715,12 @@ $('resetBtn').addEventListener('click', () => {
   $('visitCount').textContent = '0';
   $('heatLegend').classList.remove('active');
 
-  map.setView(FALLBACK_CENTER, FALLBACK_ZOOM);
+    map.setView(FALLBACK_CENTER, FALLBACK_ZOOM);
 
   clearState();
   saveState({ lang: LANG });
+
+  __toast.info(LANG === 'ar' ? 'تم تفريغ الفلاتر' : 'Filters cleared');
 });
 
 ['distributor', 'from', 'to'].forEach(id => {
@@ -1336,9 +1746,11 @@ $('resetBtn').addEventListener('click', () => {
 //  LOAD
 // ═══════════════════════════════════════════════════════════════
 async function load(isAuto) {
+  const loadStartTime = Date.now();
   const distributor = $('distributor').value;
   const from        = $('from').value;
   const to          = $('to').value;
+
 
   if (!distributor || !from || !to) {
     $('stats').innerHTML = `<div class="stat-warn">${t('selectBoth')}</div>`;
@@ -1549,8 +1961,20 @@ async function load(isAuto) {
       statsHtml += `<div class="stat-warn">${t('thinned')} <b>${route.count}</b> ${t('thinnedMid')} <b>${route.total}</b> ${t('thinnedEnd')}</div>`;
     }
 
-    $('stats').innerHTML = statsHtml;
+        $('stats').innerHTML = statsHtml;
     $('visitCount').textContent = visits.count || 0;
+
+    // Toast feedback
+    const elapsed = ((Date.now() - loadStartTime) / 1000).toFixed(1);
+    if (routePoints.length === 0 && (visits.visits || []).length === 0) {
+      __toast.warning(LANG === 'ar' ? 'لا توجد بيانات في هذا النطاق' : 'No data for this range');
+    } else {
+      __toast.success(
+        LANG === 'ar'
+          ? `تم تحميل ${routePoints.length} نقطة و ${visits.count || 0} زيارة في ${elapsed} ثانية`
+          : `Loaded ${routePoints.length} points and ${visits.count || 0} visits in ${elapsed}s`
+      );
+    }
 
     if (dayStats.length > 0) {
       $('legend').innerHTML = dayStats.map(d => `
@@ -1571,10 +1995,11 @@ async function load(isAuto) {
       document.body.classList.remove('side-open-mobile');
     }
 
-  } catch (e) {
+    } catch (e) {
     console.error('[load] failed:', e);
     $('stats').innerHTML =
       `<div class="stat-error"><b>${t('errorLabel')}:</b><br>${escapeHtml(e.message)}</div>`;
+    __toast.error((LANG === 'ar' ? 'فشل التحميل: ' : 'Load failed: ') + e.message);
   } finally {
     setLoading(false);
     $('loadBtn').disabled = false;

@@ -263,11 +263,223 @@
     body:not(.side-open-mobile) #side { transform: translateX(-105%); }
     html[dir="rtl"] body:not(.side-open-mobile) #side { transform: translateX(105%); }
 
-    body.side-collapsed #side { margin-inline-start: 0; }
+        body.side-collapsed #side { margin-inline-start: 0; }
+  }
+</style>
+
+<!-- ═══ ERROR BOUNDARY CSS (additive, isolated) ═══ -->
+<style id="error-boundary-css">
+  .eb-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .78);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  .eb-overlay.active { display: flex; }
+  .eb-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    color: #e2e8f0;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    direction: inherit;
+  }
+  .eb-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .eb-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .eb-title { font-size: 17px; font-weight: 700; color: #fff; margin: 0; }
+  .eb-sub { font-size: 12.5px; color: #94a3b8; margin-top: 2px; }
+  .eb-msg {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #e2e8f0;
+    word-break: break-word;
+    margin-bottom: 14px;
+  }
+  .eb-details { margin-top: 10px; }
+  .eb-details summary {
+    cursor: pointer;
+    font-size: 12px;
+    color: #94a3b8;
+    user-select: none;
+    padding: 4px 0;
+  }
+  .eb-details summary:hover { color: #cbd5e1; }
+  .eb-details pre {
+    background: #0f172a;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #cbd5e1;
+    overflow-x: auto;
+    max-height: 240px;
+    margin: 8px 0 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    direction: ltr;
+    text-align: left;
+  }
+  .eb-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .eb-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .eb-btn-primary { background: #3b82f6; color: #fff; }
+  .eb-btn-primary:hover { background: #2563eb; }
+  .eb-btn-ghost { background: transparent; border: 1px solid #334155; color: #cbd5e1; }
+  .eb-btn-ghost:hover { background: #0f172a; border-color: #475569; }
+  .eb-btn-copy { background: transparent; border: 1px solid #334155; color: #94a3b8; }
+  .eb-btn-copy:hover { background: #0f172a; border-color: #475569; color: #cbd5e1; }
+  @media (max-width: 560px) {
+    .eb-card { padding: 18px; }
+    .eb-actions { flex-direction: column-reverse; }
+    .eb-btn { width: 100%; justify-content: center; }
   }
 </style>
 </head>
+
 <body>
+
+<!-- ═══ ERROR BOUNDARY JS (additive, isolated) ═══ -->
+<script>
+(function() {
+  'use strict';
+  let errorCount = 0;
+  const MAX_BEFORE_LOOP_PROMPT = 5;
+
+  function ensureOverlay() {
+    let el = document.getElementById('ebOverlay');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'ebOverlay';
+    el.className = 'eb-overlay';
+    el.innerHTML = `
+      <div class="eb-card" role="alertdialog">
+        <div class="eb-head">
+          <div class="eb-icon">⚠️</div>
+          <div style="flex:1;min-width:0">
+            <h2 class="eb-title" id="ebTitle">Something went wrong</h2>
+            <div class="eb-sub">The action could not be completed.</div>
+          </div>
+        </div>
+        <div class="eb-msg" id="ebMsg">An unexpected error occurred.</div>
+        <details class="eb-details">
+          <summary>Technical details</summary>
+          <pre id="ebDetail"></pre>
+        </details>
+        <div class="eb-actions">
+          <button class="eb-btn eb-btn-copy" id="ebCopyBtn">📋 Copy</button>
+          <button class="eb-btn eb-btn-ghost" id="ebDismissBtn">Dismiss</button>
+          <button class="eb-btn eb-btn-primary" id="ebReloadBtn">🔄 Reload</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(el);
+    el.querySelector('#ebDismissBtn').addEventListener('click', hideOverlay);
+    el.querySelector('#ebReloadBtn').addEventListener('click', () => location.reload());
+    el.querySelector('#ebCopyBtn').addEventListener('click', () => {
+      const text = (document.getElementById('ebMsg').textContent || '') + '\n\n' +
+                   (document.getElementById('ebDetail').textContent || '');
+      const done = () => {
+        const btn = document.getElementById('ebCopyBtn');
+        if (btn) { const o = btn.innerHTML; btn.innerHTML = '✓ Copied'; setTimeout(() => btn.innerHTML = o, 1500); }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(done);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); done();
+      }
+    });
+    el.addEventListener('click', (e) => { if (e.target === el) hideOverlay(); });
+    return el;
+  }
+
+  function showOverlay(title, message, details) {
+    errorCount++;
+    if (errorCount >= MAX_BEFORE_LOOP_PROMPT) {
+      message = 'Multiple errors occurred. Reload the page to continue.';
+    }
+    const el = ensureOverlay();
+    el.querySelector('#ebTitle').textContent = title || 'Something went wrong';
+    el.querySelector('#ebMsg').textContent = message || 'An unexpected error occurred.';
+    el.querySelector('#ebDetail').textContent = details || '(no technical details)';
+    el.classList.add('active');
+  }
+
+  function hideOverlay() {
+    const el = document.getElementById('ebOverlay');
+    if (el) el.classList.remove('active');
+  }
+
+  function fmtError(err) {
+    if (!err) return '(no error object)';
+    if (err instanceof Error) {
+      return (err.name || 'Error') + ': ' + err.message + (err.stack ? '\n\n' + err.stack : '');
+    }
+    try { return JSON.stringify(err, null, 2); } catch (e) { return String(err); }
+  }
+
+  window.addEventListener('error', function(event) {
+    const src = event.filename || '';
+    if (/^(chrome|moz|safari|edge)-extension:|^webextension/.test(src)) return;
+    console.error('[error boundary]', event.error || event.message);
+    const details = [
+      'Message: ' + (event.message || ''),
+      'Source: '  + (event.filename || '') + ':' + (event.lineno || '') + ':' + (event.colno || ''),
+      '',
+      fmtError(event.error)
+    ].join('\n');
+    showOverlay('Unexpected error', event.message || 'A JavaScript error occurred.', details);
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    console.error('[error boundary] unhandled rejection:', event.reason);
+    showOverlay('Operation failed', (event.reason && event.reason.message) || 'A background operation failed.', fmtError(event.reason));
+  });
+
+  window.__ebShow = showOverlay;
+  window.__ebHide = hideOverlay;
+})();
+</script>
 
 <div id="topbar">
   <div class="bar-title">
