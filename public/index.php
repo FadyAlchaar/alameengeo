@@ -612,9 +612,15 @@
   /* ═══════════════════════════════════════════════════════════
      RESPONSIVE
      ═══════════════════════════════════════════════════════════ */
+     
   @media (max-width: 900px) {
     :root { --sidebar-w: 320px; }
   }
+
+  @media (max-width: 700px) {
+    .hide-mobile { display: none; }
+  }
+
 
   @media (max-width: 700px) {
     :root { --sidebar-w: min(86vw, 340px); }
@@ -658,16 +664,21 @@
 </head>
 <body>
 
-<div id="topbar">
-  <div class="bar-title">
-    <div class="logo">🚚</div>
-    <div class="text" data-i18n="appTitle">Alameen Tracker</div>
+  <div id="topbar">
+    <div class="bar-title">
+      <div class="logo">🚚</div>
+      <div class="text" data-i18n="appTitle">Alameen Tracker</div>
+    </div>
+
+    <a class="tb-btn" href="customers.php" title="Customers Map" data-i18n-title="customersMap">
+      <span class="icon">📍</span>
+    </a>
+
+    <button class="tb-btn lang" id="langBtn" title="Language">
+      <span class="icon">🌐</span>
+      <span id="langLabel">ع</span>
+    </button>
   </div>
-  <button class="tb-btn lang" id="langBtn" title="Language">
-    <span class="icon">🌐</span>
-    <span id="langLabel">ع</span>
-  </button>
-</div>
 
 <div id="app">
 
@@ -887,6 +898,7 @@ const I18N = {
     noNewGpsDaysSm:  'No new GPS data for',
     staleSuffix:     '.',
     pickDate:        'Pick a date',
+    customersMap: 'Customers Map'
   },
   ar: {
     appTitle:        'متتبع الموزع',
@@ -947,6 +959,7 @@ const I18N = {
     noNewGpsDaysSm:  'لا بيانات GPS جديدة منذ',
     staleSuffix:     '.',
     pickDate:        'اختر تاريخًا',
+    customersMap: 'خريطة الزبائن',
   },
 };
 
