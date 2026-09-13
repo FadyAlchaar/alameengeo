@@ -890,12 +890,143 @@
     from { opacity: 1; transform: translateY(0);    max-height: 200px; margin-top: 0; }
     to   { opacity: 0; transform: translateY(-10px); max-height: 0;     margin-top: -8px; }
   }
-  @keyframes toastProgress {
+    @keyframes toastProgress {
     from { transform: scaleX(1); }
     to   { transform: scaleX(0); }
   }
 </style>
+
+<!-- ═══ PER-DAY STATS TABLE CSS (additive, isolated) ═══ -->
+<style id="days-table-css">
+  .days-table {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-inline-end: 2px;
+  }
+  .days-table::-webkit-scrollbar { width: 6px; }
+  .days-table::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .day-row {
+    display: grid;
+    grid-template-columns: 10px 1fr auto auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 10px;
+    background: var(--bg-panel);
+    border-radius: 6px;
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: background .12s, transform .08s;
+    user-select: none;
+    border: 1px solid transparent;
+  }
+  .day-row:hover {
+    background: #253046;
+    border-color: rgba(59,130,246,.4);
+  }
+  .day-row:active { transform: scale(.99); }
+
+  .day-row .swatch {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.15);
+  }
+  .day-row .date {
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+  .day-row .num {
+    color: #94a3b8;
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .day-row .num.pts    { color: #60a5fa; }
+  .day-row .num.km     { color: #34d399; }
+  .day-row .num.visits { color: var(--amber); }
+
+  /* Small hint text under the title */
+  .days-hint {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    font-style: italic;
+    opacity: .85;
+  }
+
+    @media (max-width: 700px) {
+    .days-table { max-height: 220px; }
+    .day-row { padding: 8px 10px; font-size: 12px; }
+  }
+</style>
+
+<!-- ═══ SMART SEARCH CSS (additive, isolated) ═══ -->
+<style id="visit-search-css">
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 10px;
+    margin-bottom: 8px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+  }
+  .search-box .icon {
+    color: var(--text-dim);
+    font-size: 14px;
+    flex-shrink: 0;
+    line-height: 1;
+    user-select: none;
+  }
+  .search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13.5px;
+    padding: 9px 0;
+    min-width: 0;
+  }
+  .search-box input::placeholder {
+    color: var(--text-dim);
+    opacity: .8;
+  }
+  .search-box .clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0 2px;
+    line-height: 1;
+    display: none;
+    transition: color .15s;
+    flex-shrink: 0;
+  }
+  .search-box.has-value .clear-btn { display: block; }
+  .search-box .clear-btn:hover { color: var(--danger); }
+
+  /* Highlight when a filter is active */
+  .visit-item.filtered-hidden { display: none; }
+</style>
 </head>
+
 <body>
 
   <!-- ═══ ERROR BOUNDARY JS (additive, isolated, runs before everything else) ═══ -->
@@ -1078,15 +1209,19 @@
       <div class="text" data-i18n="appTitle">Alameen Tracker</div>
     </div>
 
-    <a class="tb-btn" href="customers.php" title="Customers Map" data-i18n-title="customersMap">
-      <span class="icon">📍</span>
-    </a>
+  <button class="tb-btn" id="copyLinkBtn" title="Copy shareable link" data-i18n-title="copyLink">
+    <span class="icon">🔗</span>
+  </button>
 
-    <button class="tb-btn lang" id="langBtn" title="Language">
-      <span class="icon">🌐</span>
-      <span id="langLabel">ع</span>
-    </button>
-  </div>
+  <a class="tb-btn" href="customers.php" title="Customers Map" data-i18n-title="customersMap">
+    <span class="icon">📍</span>
+  </a>
+
+  <button class="tb-btn lang" id="langBtn" title="Language">
+    <span class="icon">🌐</span>
+    <span id="langLabel">ع</span>
+  </button>
+</div>
 
 <div id="app">
 
@@ -1158,7 +1293,8 @@
 
     <div class="panel" id="legendPanel" style="display:none;">
       <div class="panel-title" data-i18n="daysInView">Days in view</div>
-      <div class="legend" id="legend"></div>
+      <div class="days-hint" data-i18n="daysHint">Click a day to zoom the map</div>
+      <div class="days-table" id="daysTable"></div>
       <div style="margin-top:10px;padding-top:8px;border-top:1px solid #334155">
         <div class="legend-item">
           <span class="legend-dot" style="background:#8b5cf6"></span>
@@ -1182,6 +1318,11 @@
     <div class="panel">
       <div class="panel-title">
         <span data-i18n="visits">Visits</span> (<span id="visitCount">0</span>)
+      </div>
+      <div class="search-box" id="visitSearchBox">
+        <span class="icon">🔍</span>
+        <input type="text" id="visitSearchInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button class="clear-btn" id="visitSearchClear" type="button" aria-label="Clear">×</button>
       </div>
       <div class="visit-list" id="visitList"></div>
     </div>
@@ -1261,11 +1402,13 @@ const I18N = {
     playback:        '▶ Playback',
     revealVisits:    'Reveal visits as time advances',
     daysInView:      'Days in view',
+    daysHint:        'Click a day to zoom the map',
     visitCustomer:   'Visit (customer GPS)',
     visitNear:       'Visit (near route point)',
     playbackTrail:   'Playback trail',
     gpsDensity:      'GPS density (heat)',
     visits:          'Visits',
+    searchVisits:    'Search by name, time, trip…',
     low:             'Low',
     high:            'High',
     noData:          'No data loaded.',
@@ -1306,6 +1449,7 @@ const I18N = {
     noNewGpsDaysSm:  'No new GPS data for',
     staleSuffix:     '.',
     pickDate:        'Pick a date',
+    copyLink:        'Copy shareable link',
     customersMap: 'Customers Map'
   },
   ar: {
@@ -1322,11 +1466,13 @@ const I18N = {
     playback:        '▶ إعادة التشغيل',
     revealVisits:    'إظهار الزيارات مع تقدّم الوقت',
     daysInView:      'الأيام المعروضة',
+    daysHint:        'اضغط على اليوم للتكبير على الخريطة',
     visitCustomer:   'زيارة (إحداثيات العميل)',
     visitNear:       'زيارة (أقرب نقطة على المسار)',
     playbackTrail:   'أثر إعادة التشغيل',
     gpsDensity:      'كثافة الإحداثيات',
     visits:          'الزيارات',
+    searchVisits:    'ابحث بالاسم أو الوقت أو الرحلة…',
     low:             'منخفض',
     high:            'مرتفع',
     noData:          'لا توجد بيانات محمّلة.',
@@ -1367,6 +1513,7 @@ const I18N = {
     noNewGpsDaysSm:  'لا بيانات GPS جديدة منذ',
     staleSuffix:     '.',
     pickDate:        'اختر تاريخًا',
+    copyLink:        'نسخ الرابط',
     customersMap: 'خريطة الزبائن',
   },
 };
@@ -1389,6 +1536,12 @@ function applyLanguage() {
     const el = document.getElementById(id);
     if (el) el.title = t('pickDate');
   });
+    // Update tooltips
+  const _cl = document.getElementById('copyLinkBtn');
+  if (_cl) _cl.title = t('copyLink');
+    // Update search placeholder
+  const _vs = document.getElementById('visitSearchInput');
+  if (_vs) _vs.placeholder = t('searchVisits');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1425,6 +1578,8 @@ const visitLayer = L.markerClusterGroup({
 let heatLayer = null;
 let currentVisitMarkers = {};
 let selectionMarker = null;          // ← crosshair marker (bug-fix)
+let currentVisitList    = [];        // ← full unfiltered list of visits
+let currentVisitFilter  = '';        // ← current search query
 
 function showCrosshair(lat, lon) {
   if (selectionMarker) { map.removeLayer(selectionMarker); selectionMarker = null; }
@@ -1553,6 +1708,47 @@ function clearState() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  URL STATE
+//  Encodes the current view into ?d=&f=&t=&r=&v=&h= so a link
+//  is fully shareable. URL params take priority over localStorage
+//  when the page loads.
+// ═══════════════════════════════════════════════════════════════
+function readUrlState() {
+  const p = new URLSearchParams(location.search);
+  const bool = v => v === '1' ? true : v === '0' ? false : undefined;
+  return {
+    distributor: p.get('d') || '',
+    from:        p.get('f') || '',
+    to:          p.get('t') || '',
+    showRoute:   bool(p.get('r')),
+    showVisits:  bool(p.get('v')),
+    showHeat:    bool(p.get('h')),
+  };
+}
+
+function writeUrlState() {
+  const params = new URLSearchParams();
+
+  const d = $('distributor').value || '';
+  const f = $('from').value || '';
+  const t = $('to').value || '';
+
+  if (d) params.set('d', d);
+  if (f) params.set('f', f);
+  if (t) params.set('t', t);
+  params.set('r', $('showRoute').checked  ? '1' : '0');
+  params.set('v', $('showVisits').checked ? '1' : '0');
+  params.set('h', $('showHeat').checked   ? '1' : '0');
+
+  const newUrl = location.pathname + '?' + params.toString();
+  // Only touch history if the URL actually changed
+  if (location.pathname + location.search !== newUrl) {
+    history.replaceState(null, '', newUrl);
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
 //  LANGUAGE
 // ═══════════════════════════════════════════════════════════════
 $('langBtn').addEventListener('click', () => {
@@ -1560,6 +1756,45 @@ $('langBtn').addEventListener('click', () => {
   localStorage.setItem('alameen_lang', LANG);
   applyLanguage();
   saveState({ lang: LANG });
+});
+
+// ═══ Copy Link ═══
+$('copyLinkBtn').addEventListener('click', () => {
+  // Make sure URL is fresh before copying
+  writeUrlState();
+  const url = location.href;
+
+  const done = () => __toast.success(LANG === 'ar' ? 'تم نسخ الرابط ✓' : 'Link copied ✓');
+  const fail = () => __toast.error(LANG === 'ar' ? 'فشل النسخ' : 'Copy failed');
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(done).catch(() => {
+      // Fallback
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      } catch (e) { fail(); }
+    });
+  } else {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      done();
+    } catch (e) { fail(); }
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -1598,7 +1833,11 @@ $('sideBackdrop').addEventListener('click', () => {
 (async function init() {
   applyLanguage();
 
-  const saved = loadState();
+    // URL state takes priority over localStorage
+  const urlState   = readUrlState();
+  const hasUrlView = !!(urlState.distributor && urlState.from && urlState.to);
+  const saved      = hasUrlView ? { ...loadState(), ...urlState } : loadState();
+
   const today = new Date();
   const week  = new Date(); week.setDate(today.getDate() - 7);
   $('from').value = saved.from || fmtDate(week);
@@ -1708,12 +1947,20 @@ $('resetBtn').addEventListener('click', () => {
   $('showHeat').checked   = false;
 
   $('stats').innerHTML    = t('noData');
-  $('legend').innerHTML   = '';
+  const _dt2 = $('daysTable'); if (_dt2) _dt2.innerHTML = '';
   $('legendPanel').style.display = 'none';
   $('playbackPanel').style.display = 'none';
   $('visitList').innerHTML = '';
   $('visitCount').textContent = '0';
   $('heatLegend').classList.remove('active');
+
+  // Clear visit search
+  currentVisitList   = [];
+  currentVisitFilter = '';
+  const _si2 = $('visitSearchInput');
+  if (_si2) _si2.value = '';
+  const _sb2 = $('visitSearchBox');
+  if (_sb2) _sb2.classList.remove('has-value');
 
     map.setView(FALLBACK_CENTER, FALLBACK_ZOOM);
 
@@ -1730,6 +1977,7 @@ $('resetBtn').addEventListener('click', () => {
       from: $('from').value,
       to:   $('to').value,
     });
+    writeUrlState();
   });
 });
 ['showRoute', 'showVisits', 'showHeat'].forEach(id => {
@@ -1739,6 +1987,7 @@ $('resetBtn').addEventListener('click', () => {
       showVisits: $('showVisits').checked,
       showHeat:   $('showHeat').checked,
     });
+    writeUrlState();
   });
 });
 
@@ -1777,8 +2026,15 @@ async function load(isAuto) {
   clearCrosshair();
   currentVisitMarkers = {};
   $('visitList').innerHTML   = '';
-  $('legend').innerHTML      = '';
+  const _dt1 = $('daysTable'); if (_dt1) _dt1.innerHTML = '';
   $('legendPanel').style.display = 'none';
+
+  // Clear visit search filter on each load
+  currentVisitFilter = '';
+  const _si = $('visitSearchInput');
+  if (_si) _si.value = '';
+  const _sb = $('visitSearchBox');
+  if (_sb) _sb.classList.remove('has-value');
   $('heatLegend').classList.remove('active');
   $('stats').innerHTML       = `<div>${t('loading')}</div>`;
 
@@ -1815,9 +2071,17 @@ async function load(isAuto) {
     let totalKm = 0;
     const dayStats = [];
 
+    // Count visits per day (for the table)
+    const visitsPerDay = new Map();
+    (visits.visits || []).forEach(v => {
+      const day = String(v.StartTime || '').slice(0, 10);
+      if (day) visitsPerDay.set(day, (visitsPerDay.get(day) || 0) + 1);
+    });
+
     sortedDays.forEach((day, idx) => {
-      const pts   = daysMap.get(day).map(p => [p.lat, p.lon]);
-      const color = DAY_COLORS[idx % DAY_COLORS.length];
+      const dayPts = daysMap.get(day);
+      const pts    = dayPts.map(p => [p.lat, p.lon]);
+      const color  = DAY_COLORS[idx % DAY_COLORS.length];
 
       if (pts.length > 1) {
         L.polyline(pts, {
@@ -1834,7 +2098,21 @@ async function load(isAuto) {
         for (let i = 1; i < pts.length; i++) dayKm += haversine(pts[i - 1], pts[i]);
       }
       totalKm += dayKm;
-      dayStats.push({ day, count: pts.length, km: dayKm, color });
+
+      // Bounds for zoom-to-day
+      let bounds = null;
+      if (pts.length > 0) {
+        bounds = L.latLngBounds(pts);
+      }
+
+      dayStats.push({
+        day,
+        count:  pts.length,
+        km:     dayKm,
+        color,
+        visits: visitsPerDay.get(day) || 0,
+        bounds
+      });
     });
 
     if (typeof route.distance_km === 'number') totalKm = route.distance_km;
@@ -1924,7 +2202,9 @@ async function load(isAuto) {
 
     playbackVisits.sort((a, b) => a.timeMs - b.timeMs);
 
-    renderVisitList(visitList);
+    // Store the full list for search, then apply the (empty) filter
+    currentVisitList = visitList;
+    applyVisitFilter();
 
     const bounds = [];
     routePoints.forEach(p => bounds.push([p.lat, p.lon]));
@@ -1961,8 +2241,12 @@ async function load(isAuto) {
       statsHtml += `<div class="stat-warn">${t('thinned')} <b>${route.count}</b> ${t('thinnedMid')} <b>${route.total}</b> ${t('thinnedEnd')}</div>`;
     }
 
-        $('stats').innerHTML = statsHtml;
-    $('visitCount').textContent = visits.count || 0;
+    $('stats').innerHTML = statsHtml;
+    // visitCount is now managed by applyVisitFilter() above
+
+    // Ensure URL reflects the loaded view
+    writeUrlState();
+    // $('visitCount').textContent = visits.count || 0;
 
     // Toast feedback
     const elapsed = ((Date.now() - loadStartTime) / 1000).toFixed(1);
@@ -1976,16 +2260,32 @@ async function load(isAuto) {
       );
     }
 
-    if (dayStats.length > 0) {
-      $('legend').innerHTML = dayStats.map(d => `
-        <div class="legend-item">
-          <span class="legend-swatch" style="background:${d.color}"></span>
-          <span>${escapeHtml(d.day)}</span>
-          <span style="margin-inline-start:auto;color:#94a3b8;font-size:11px">
-            ${d.count} pts · ${d.km.toFixed(1)} km
-          </span>
-        </div>
-      `).join('');
+      if (dayStats.length > 0) {
+      const tbl = $('daysTable');
+      tbl.innerHTML = '';
+      dayStats.forEach(d => {
+        const row = document.createElement('div');
+        row.className = 'day-row';
+        row.title = `${d.day} — ${d.count} pts · ${d.km.toFixed(1)} km · ${d.visits} visits`;
+        row.innerHTML = `
+          <span class="swatch" style="background:${d.color}"></span>
+          <span class="date">${escapeHtml(d.day)}</span>
+          <span class="num pts">${d.count}</span>
+          <span class="num km">${d.km.toFixed(1)}</span>
+          <span class="num visits">${d.visits}</span>
+        `;
+        row.addEventListener('click', () => {
+          if (d.bounds && d.bounds.isValid()) {
+            map.fitBounds(d.bounds, { padding: [50, 50] });
+            __toast.info(
+              LANG === 'ar'
+                ? `${d.day} — ${d.count} نقطة · ${d.km.toFixed(1)} كم · ${d.visits} زيارة`
+                : `${d.day} — ${d.count} pts · ${d.km.toFixed(1)} km · ${d.visits} visits`
+            );
+          }
+        });
+        tbl.appendChild(row);
+      });
       $('legendPanel').style.display = '';
     }
 
@@ -2053,6 +2353,56 @@ function renderVisitList(list) {
     box.appendChild(el);
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  VISIT SEARCH FILTER
+// ═══════════════════════════════════════════════════════════════
+function applyVisitFilter() {
+  const q = currentVisitFilter.trim().toLowerCase();
+
+  let filtered = currentVisitList;
+  if (q) {
+    filtered = currentVisitList.filter(({ v, hasGps, source }) => {
+      const name  = String(v.CustomerName || '').toLowerCase();
+      const time  = String(v.StartTime || '').toLowerCase();
+      const state = String(v.State ?? '').toLowerCase();
+      const trip  = String(v.TripNumber ?? '').toLowerCase();
+      const src   = String(source || '').toLowerCase();
+      const tag   = hasGps ? '' : 'no gps';
+      return name.includes(q) || time.includes(q) ||
+             state.includes(q) || trip.includes(q) ||
+             src.includes(q)  || tag.includes(q);
+    });
+  }
+
+  renderVisitList(filtered);
+
+  const total = currentVisitList.length;
+  const shown = filtered.length;
+  const cnt   = $('visitCount');
+  if (cnt) cnt.textContent = q ? `${shown} / ${total}` : String(total);
+}
+
+$('visitSearchInput').addEventListener('input', (e) => {
+  currentVisitFilter = e.target.value;
+  $('visitSearchBox').classList.toggle('has-value', currentVisitFilter.length > 0);
+  applyVisitFilter();
+});
+
+$('visitSearchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    $('visitSearchClear').click();
+  }
+});
+
+$('visitSearchClear').addEventListener('click', () => {
+  $('visitSearchInput').value = '';
+  currentVisitFilter = '';
+  $('visitSearchBox').classList.remove('has-value');
+  applyVisitFilter();
+  $('visitSearchInput').focus();
+});
 
 // ═══════════════════════════════════════════════════════════════
 //  POPUP

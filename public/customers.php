@@ -366,10 +366,104 @@
   .eb-btn-ghost:hover { background: #0f172a; border-color: #475569; }
   .eb-btn-copy { background: transparent; border: 1px solid #334155; color: #94a3b8; }
   .eb-btn-copy:hover { background: #0f172a; border-color: #475569; color: #cbd5e1; }
-  @media (max-width: 560px) {
+    @media (max-width: 560px) {
     .eb-card { padding: 18px; }
     .eb-actions { flex-direction: column-reverse; }
     .eb-btn { width: 100%; justify-content: center; }
+  }
+</style>
+
+<!-- ═══ TOAST CSS (additive, isolated) ═══ -->
+<style id="toast-css">
+  .toast-container {
+    position: fixed;
+    top: calc(var(--header-h) + env(safe-area-inset-top, 0px) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(92vw, 420px);
+    pointer-events: none;
+  }
+  .toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #1e293b;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+    border-inline-start: 4px solid #3b82f6;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    font-size: 13px;
+    line-height: 1.5;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Cairo', sans-serif;
+    animation: toastIn .3s cubic-bezier(.2, .9, .3, 1.15);
+  }
+  .toast.removing { animation: toastOut .22s ease-in forwards; }
+  .toast-icon {
+    width: 20px; height: 20px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; line-height: 1; font-weight: 700;
+    color: #3b82f6;
+  }
+  .toast-body { flex: 1; min-width: 0; word-break: break-word; }
+  .toast-close {
+    width: 22px; height: 22px;
+    border-radius: 6px; border: none;
+    background: transparent; color: #94a3b8;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+    transition: background .15s, color .15s;
+    padding: 0; line-height: 1;
+  }
+  .toast-close:hover { background: #0f172a; color: #e2e8f0; }
+  .toast-progress {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: #3b82f6;
+    opacity: .5;
+    transform-origin: left;
+    animation: toastProgress linear forwards;
+  }
+  html[dir="rtl"] .toast-progress { transform-origin: right; }
+
+  .toast.success { border-inline-start-color: #10b981; }
+  .toast.success .toast-icon { color: #10b981; }
+  .toast.success .toast-progress { background: #10b981; }
+
+  .toast.error { border-inline-start-color: #ef4444; }
+  .toast.error .toast-icon { color: #ef4444; }
+  .toast.error .toast-progress { background: #ef4444; }
+
+  .toast.warning { border-inline-start-color: #f59e0b; }
+  .toast.warning .toast-icon { color: #f59e0b; }
+  .toast.warning .toast-progress { background: #f59e0b; }
+
+  .toast.info { border-inline-start-color: #3b82f6; }
+  .toast.info .toast-icon { color: #3b82f6; }
+  .toast.info .toast-progress { background: #3b82f6; }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateY(0);    max-height: 200px; margin-top: 0; }
+    to   { opacity: 0; transform: translateY(-10px); max-height: 0;     margin-top: -8px; }
+  }
+  @keyframes toastProgress {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
   }
 </style>
 </head>
@@ -476,8 +570,72 @@
     showOverlay('Operation failed', (event.reason && event.reason.message) || 'A background operation failed.', fmtError(event.reason));
   });
 
-  window.__ebShow = showOverlay;
+    window.__ebShow = showOverlay;
   window.__ebHide = hideOverlay;
+})();
+</script>
+
+<!-- ═══ TOAST JS (additive, isolated) ═══ -->
+<script>
+(function() {
+  'use strict';
+
+  function ensureContainer() {
+    let el = document.getElementById('toastContainer');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'toastContainer';
+    el.className = 'toast-container';
+    document.body.appendChild(el);
+    return el;
+  }
+
+  const ICONS = { success: '✓', error: '✕', warning: '!', info: 'ℹ' };
+  const DEFAULT_DURATION = { success: 3500, info: 3500, warning: 5000, error: 6500 };
+
+  function showToast(message, type, duration) {
+    type = type || 'info';
+    if (typeof message !== 'string') message = String(message || '');
+    if (!message) return function() {};
+
+    const container = ensureContainer();
+    const ms = (duration != null) ? duration : (DEFAULT_DURATION[type] || 4000);
+
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.setAttribute('role', 'status');
+    toast.innerHTML = `
+      <div class="toast-icon">${ICONS[type] || 'ℹ'}</div>
+      <div class="toast-body"></div>
+      <button class="toast-close" aria-label="Close">×</button>
+      <div class="toast-progress"></div>
+    `;
+    toast.querySelector('.toast-body').textContent = message;
+
+    const progress = toast.querySelector('.toast-progress');
+    progress.style.animationDuration = ms + 'ms';
+
+    let removed = false;
+    function remove() {
+      if (removed) return;
+      removed = true;
+      toast.classList.add('removing');
+      setTimeout(() => toast.remove(), 240);
+    }
+
+    toast.querySelector('.toast-close').addEventListener('click', remove);
+    container.appendChild(toast);
+    setTimeout(remove, ms);
+    return remove;
+  }
+
+  window.__toast = {
+    show:    (msg, type, ms) => showToast(msg, type, ms),
+    success: (msg, ms) => showToast(msg, 'success', ms),
+    error:   (msg, ms) => showToast(msg, 'error', ms),
+    warning: (msg, ms) => showToast(msg, 'warning', ms),
+    info:    (msg, ms) => showToast(msg, 'info', ms),
+  };
 })();
 </script>
 
@@ -740,8 +898,18 @@ async function loadCustomers(distributorGuid, forceRefresh) {
       markerByGuid[c.CustomerGUID] = marker;
     }
 
-    $('totalCount').textContent = allCustomers.length;
+        $('totalCount').textContent = allCustomers.length;
     renderList(allCustomers, '');
+
+    if (allCustomers.length === 0) {
+      __toast.warning(LANG === 'ar' ? 'لا يوجد زبائن بإحداثيات' : 'No customers with coordinates');
+    } else {
+      __toast.success(
+        LANG === 'ar'
+          ? `تم تحميل ${allCustomers.length} زبون على الخريطة`
+          : `Loaded ${allCustomers.length} customers on the map`
+      );
+    }
 
     if (allCustomers.length > 0) {
       const bounds = L.latLngBounds(allCustomers.map(c => [c.Lat, c.Lon]));
@@ -750,12 +918,13 @@ async function loadCustomers(distributorGuid, forceRefresh) {
       map.setView(FALLBACK_CENTER, FALLBACK_ZOOM);
     }
 
-  } catch (e) {
+    } catch (e) {
     console.error('[loadCustomers] failed:', e);
     $('customerList').innerHTML =
       `<div style="color:#ef4444;font-size:12px;padding:8px">
         <b>${t('error')}:</b> ${escapeHtml(e.message)}
        </div>`;
+    __toast.error((LANG === 'ar' ? 'فشل التحميل: ' : 'Load failed: ') + e.message);
   } finally {
     setLoading(false);
   }
@@ -850,11 +1019,14 @@ $('search').addEventListener('input', (e) => {
 $('distributor').addEventListener('change', () => {
   const guid = $('distributor').value;
   saveState({ distributor: guid });
+  const label = $('distributor').selectedOptions[0]?.textContent || '';
+  __toast.info(label || (LANG === 'ar' ? 'جارٍ التحميل…' : 'Loading…'));
   loadCustomers(guid, false);
 });
 
 $('refreshBtn').addEventListener('click', () => {
   const guid = $('distributor').value;
+  __toast.info(LANG === 'ar' ? 'جارٍ إعادة بناء الذاكرة…' : 'Rebuilding cache…');
   loadCustomers(guid, true);
 });
 
