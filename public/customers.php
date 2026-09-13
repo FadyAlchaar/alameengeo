@@ -5,6 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Customers Map — Alameen Tracker</title>
 
+<!-- ═══ THEME PRE-LOAD (prevents flash of wrong theme) ═══ -->
+<script>
+(function() {
+  try {
+    var t = localStorage.getItem('alameen_theme');
+    if (t === 'light' || t === 'dark') {
+      document.documentElement.setAttribute('data-theme', t);
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+
 <link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="vendor/MarkerCluster.css">
 <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
@@ -29,6 +45,104 @@
     --sidebar-w:    360px;
     --header-h:     48px;
   }
+
+    /* ═══ LIGHT THEME ═══ */
+  html[data-theme="light"] {
+    --bg-dark:      #f1f5f9;
+    --bg-panel:     #ffffff;
+    --bg-input:     #f8fafc;
+    --border:       #cbd5e1;
+    --text:         #0f172a;
+    --text-dim:     #64748b;
+    --accent:       #2563eb;
+    --accent-hover: #1d4ed8;
+    --danger:       #dc2626;
+    --danger-hover: #b91c1c;
+    --success:      #059669;
+    --warning:      #d97706;
+    --purple:       #7c3aed;
+    --amber:        #b45309;
+  }
+
+  /* ═══ LIGHT THEME — targeted overrides for hardcoded colors ═══ */
+  html[data-theme="light"] body { background: var(--bg-dark); }
+
+  html[data-theme="light"] .visit-item:hover       { background: #e2e8f0; }
+  html[data-theme="light"] .day-row:hover          { background: #e2e8f0; }
+  html[data-theme="light"] .customer-item:hover    { background: #e2e8f0; }
+  html[data-theme="light"] .customer-item.selected { background: #dbeafe; border-inline-start-color: #b45309; }
+
+  /* Coverage banner in light mode */
+  html[data-theme="light"] .coverage {
+    background: linear-gradient(135deg, rgba(219,234,254,.7), #f8fafc);
+  }
+  html[data-theme="light"] .coverage.warn {
+    background: linear-gradient(135deg, rgba(254,243,199,.85), #f8fafc);
+  }
+  html[data-theme="light"] .coverage.danger {
+    background: linear-gradient(135deg, rgba(254,226,226,.85), #f8fafc);
+  }
+  html[data-theme="light"] .coverage b      { color: #0f172a; }
+  html[data-theme="light"] .coverage .title { color: #1d4ed8; }
+  html[data-theme="light"] .coverage.warn .title   { color: #b45309; }
+  html[data-theme="light"] .coverage.danger .title { color: #b91c1c; }
+
+  /* Stat values */
+  html[data-theme="light"] .stat-row b  { color: #2563eb; }
+  html[data-theme="light"] .stat-bar b  { color: #2563eb; }
+
+  /* Leaflet controls and popups in light mode */
+  html[data-theme="light"] .leaflet-bar a {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+  html[data-theme="light"] .leaflet-bar a:hover { background: #f1f5f9; }
+  html[data-theme="light"] .leaflet-popup-content-wrapper,
+  html[data-theme="light"] .leaflet-popup-tip {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 3px 14px rgba(0,0,0,.15);
+  }
+  html[data-theme="light"] .leaflet-popup-content b { color: #0f172a; }
+  html[data-theme="light"] .popup-meta { color: #64748b; }
+
+  /* Heat legend */
+  html[data-theme="light"] .heat-legend {
+    background: rgba(255,255,255,.96);
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+  html[data-theme="light"] .heat-legend .title { color: #64748b; }
+
+  /* Loading */
+  html[data-theme="light"] .loading-overlay { background: rgba(241,245,249,.55); }
+  html[data-theme="light"] .spinner {
+    border-color: rgba(0,0,0,.12);
+    border-top-color: var(--accent);
+  }
+
+  /* Empty / hint text */
+  html[data-theme="light"] .stat-warn  { color: #b45309; }
+  html[data-theme="light"] .stat-error { color: #b91c1c; }
+
+  /* Search box */
+  html[data-theme="light"] .search-box input { color: #0f172a; }
+
+  /* Sidebar toggle button and hamburger */
+  html[data-theme="light"] #sidebarToggle {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+  html[data-theme="light"] #sidebarToggle:hover { background: #f1f5f9; border-color: #2563eb; }
+
+  /* Mobile drawer shadow */
+  @media (max-width: 700px) {
+    html[data-theme="light"] #side { box-shadow: 4px 0 18px rgba(0,0,0,.12); }
+    html[dir="rtl"][data-theme="light"] #side { box-shadow: -4px 0 18px rgba(0,0,0,.12); }
+  }
+
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -649,6 +763,14 @@
     <span class="icon">🚚</span>
   </a>
 
+  <button class="tb-btn" id="copyLinkBtn" title="Copy shareable link" data-i18n-title="copyLink">
+    <span class="icon">🔗</span>
+  </button>
+
+  <button class="tb-btn" id="themeBtn" title="Toggle theme" data-i18n-title="toggleTheme">
+    <span class="icon" id="themeIcon">☀️</span>
+  </button>
+
   <button class="tb-btn" id="refreshBtn" title="Refresh cache" data-i18n-title="refresh">
     <span class="icon">🔄</span>
   </button>
@@ -1035,6 +1157,24 @@ $('langBtn').addEventListener('click', () => {
   localStorage.setItem('alameen_lang', LANG);
   applyLanguage();
   renderList(allCustomers, $('search').value);
+});
+
+// ═══ Theme Toggle ═══
+function updateThemeIcon() {
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
+updateThemeIcon();
+
+$('themeBtn').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('alameen_theme', next); } catch (e) {}
+  updateThemeIcon();
+  __toast.info(next === 'dark' ? t('darkMode') : t('lightMode'));
 });
 
 const isMobile = () => window.matchMedia('(max-width: 700px)').matches;
