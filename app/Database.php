@@ -31,7 +31,7 @@ class Database {
     // ═══════════════════════════════════════════════════════════
     private const SERVER   = 'localhost\\SQLEXPRESS';        // ← change to 'localhost\SQLEXPRESS' for local XAMPP
     private const DATABASE = 'AmnDb006';         // ← tracker database name
-    private const USER     = 'sa';
+    private const USER     = 'alameengeo_reader';
     private const PASS     = 'P@ssw0rd';         // ← same password as the billing app
     // ═══════════════════════════════════════════════════════════
 

@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alameen Distributor Tracker — Application Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ─── RESET & BASE ─── */
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+    color: #1e293b;
+    background: #eef2f7;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  /* ─── PAGE LAYOUT ─── */
+  .page {
+    max-width: 900px;
+    margin: 24px auto;
+    background: #fff;
+    padding: 60px 70px;
+    box-shadow: 0 4px 24px rgba(15,23,42,.08);
+    border-radius: 6px;
+  }
+  .page.cover {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #fff;
+  }
+
+  /* ─── COVER ─── */
+  .cover-icon {
+    width: 90px; height: 90px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px;
+    margin: 0 auto 32px;
+    box-shadow: 0 12px 40px rgba(59,130,246,.4);
+  }
+  .cover h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -.5px;
+    margin: 0 0 12px;
+    line-height: 1.15;
+  }
+  .cover .tagline {
+    font-size: 16px;
+    color: #cbd5e1;
+    font-weight: 400;
+    margin: 0 0 48px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-width: 460px;
+    margin: 0 auto;
+    text-align: start;
+  }
+  .cover-meta .item {
+    padding: 12px 16px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px;
+  }
+  .cover-meta .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .cover-meta .value {
+    font-size: 13.5px;
+    color: #fff;
+    font-weight: 600;
+    direction: ltr;
+  }
+
+  /* ─── TOC ─── */
+  .toc {
+    page-break-after: always;
+  }
+  .toc h2 {
+    font-size: 24px;
+    color: #0f172a;
+    margin: 0 0 24px;
+    padding-bottom: 12px;
+    border-bottom: 3px solid #3b82f6;
+    font-weight: 800;
+  }
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .toc-list li {
+    display: flex;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px dashed #cbd5e1;
+    font-size: 13.5px;
+  }
+  .toc-list .num {
+    font-weight: 700;
+    color: #3b82f6;
+    margin-right: 12px;
+    min-width: 32px;
+    font-variant-numeric: tabular-nums;
+  }
+  .toc-list .title {
+    color: #1e293b;
+    font-weight: 500;
+  }
+  .toc-list li.sub { padding-left: 44px; font-size: 12.5px; }
+  .toc-list li.sub .num { color: #8b5cf6; min-width: 44px; font-weight: 600; }
+
+  /* ─── HEADINGS ─── */
+  h2.section {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 42px 0 18px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #3b82f6;
+    page-break-after: avoid;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  h2.section .num {
+    color: #3b82f6;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .5px;
+  }
+  h2.section:first-of-type { margin-top: 0; }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 26px 0 10px;
+    padding-left: 12px;
+    border-left: 4px solid #3b82f6;
+    page-break-after: avoid;
+  }
+
+  h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+    margin: 18px 0 8px;
+    page-break-after: avoid;
+  }
+
+  p { margin: 0 0 12px; }
+
+  /* ─── CODE ─── */
+  code, pre {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 11.5px;
+  }
+  code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #be185d;
+    font-size: 11.5px;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 14px 18px;
+    border-radius: 8px;
+    overflow-x: auto;
+    line-height: 1.55;
+    margin: 12px 0 18px;
+    border-left: 4px solid #3b82f6;
+    page-break-inside: avoid;
+  }
+  pre code { background: transparent; color: inherit; padding: 0; font-size: 11.5px; }
+
+  /* ─── TABLES ─── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px;
+    font-size: 12.5px;
+    page-break-inside: avoid;
+  }
+  thead th {
+    background: #f1f5f9;
+    text-align: start;
+    padding: 9px 12px;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: #475569;
+    border-bottom: 2px solid #cbd5e1;
+    font-weight: 700;
+  }
+  tbody td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    vertical-align: top;
+  }
+  tbody tr:nth-child(even) td { background: #fafbfc; }
+  td code { font-size: 11px; }
+
+  /* ─── CALLOUTS ─── */
+  .callout {
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 13px;
+    line-height: 1.65;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    page-break-inside: avoid;
+  }
+  .callout .icon { font-size: 20px; flex-shrink: 0; line-height: 1.2; }
+  .callout.info    { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e3a8a; }
+  .callout.success { background: #f0fdf4; border-left: 4px solid #10b981; color: #14532d; }
+  .callout.warn    { background: #fffbeb; border-left: 4px solid #f59e0b; color: #78350f; }
+  .callout.danger  { background: #fef2f2; border-left: 4px solid #ef4444; color: #7f1d1d; }
+  .callout b { font-weight: 700; }
+
+  /* ─── LISTS ─── */
+  ul, ol {
+    margin: 8px 0 16px;
+    padding-inline-start: 26px;
+    color: #334155;
+  }
+  ul li, ol li { margin-bottom: 4px; }
+
+  /* ─── DIAGRAM ─── */
+  .diagram {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #334155;
+    overflow-x: auto;
+    margin: 16px 0;
+    white-space: pre;
+    page-break-inside: avoid;
+  }
+
+  /* ─── STAT CARDS ─── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin: 16px 0;
+    page-break-inside: avoid;
+  }
+  .stat-card {
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-top: 4px solid #3b82f6;
+    border-radius: 8px;
+  }
+  .stat-card .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .stat-card .value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .stat-card.red    { border-top-color: #ef4444; background: #fef2f2; }
+  .stat-card.amber  { border-top-color: #f59e0b; background: #fffbeb; }
+  .stat-card.purple { border-top-color: #8b5cf6; background: #f5f3ff; }
+  .stat-card.green  { border-top-color: #10b981; background: #f0fdf4; }
+
+  /* ─── LISTS in cards ─── */
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 20px;
+  }
+  .feature-list li {
+    padding: 7px 0 7px 26px;
+    position: relative;
+    font-size: 12.5px;
+    color: #334155;
+    border-bottom: 1px dashed #e2e8f0;
+  }
+  .feature-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    color: #10b981;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  /* ─── FOOTER ─── */
+  .footer-note {
+    margin-top: 50px;
+    padding-top: 24px;
+    border-top: 2px solid #e2e8f0;
+    text-align: center;
+    color: #64748b;
+    font-size: 12px;
+    font-style: italic;
+    line-height: 1.7;
+  }
+  .footer-note .big {
+    font-size: 16px;
+    color: #0f172a;
+    font-weight: 700;
+    font-style: normal;
+    margin-bottom: 8px;
+  }
+
+  /* ─── PRINT ─── */
+  @page {
+    size: A4;
+    margin: 18mm 15mm 18mm 15mm;
+  }
+  @media print {
+    html, body {
+      background: #fff;
+      font-size: 11.5px;
+      line-height: 1.55;
+    }
+    .page {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      box-shadow: none;
+      border-radius: 0;
+      page-break-after: always;
+    }
+    .page.cover {
+      min-height: auto;
+      padding: 40mm 20mm 60mm;
+      page-break-after: always;
+      background: #0f172a !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    h2.section { font-size: 18px; margin-top: 20px; }
+    h3 { font-size: 14px; }
+    pre { font-size: 10.5px; padding: 10px 14px; }
+    table { font-size: 11px; }
+    .cover h1 { font-size: 34px; }
+    .cover-icon { width: 70px; height: 70px; font-size: 34px; }
+    .feature-list { font-size: 11.5px; }
+    .callout, .stat-card, .diagram { page-break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  COVER                                                     -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page cover">
+  <div class="cover-icon">🚚</div>
+  <h1>Alameen Distributor Tracker</h1>
+  <p class="tagline">A read-only web dashboard for visualizing distributor GPS routes, customer visits, and behavioral patterns.</p>
+
+  <div class="cover-meta">
+    <div class="item">
+      <div class="label">Application</div>
+      <div class="value">Alameen Tracker v1.0</div>
+    </div>
+    <div class="item">
+      <div class="label">Database</div>
+      <div class="value">AmnDb006</div>
+    </div>
+    <div class="item">
+      <div class="label">Platform</div>
+      <div class="value">Apache + PHP + SQL Server</div>
+    </div>
+    <div class="item">
+      <div class="label">Version</div>
+      <div class="value">1.0 — Complete</div>
+    </div>
+    <div class="item">
+      <div class="label">Languages</div>
+      <div class="value">العربية · English</div>
+    </div>
+    <div class="item">
+      <div class="label">Report Date</div>
+      <div class="value" id="reportDate">—</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  TABLE OF CONTENTS                                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page toc">
+  <h2>Table of Contents</h2>
+  <ul class="toc-list">
+    <li><span class="num">1</span><span class="title">Overview</span></li>
+    <li><span class="num">2</span><span class="title">Architecture</span></li>
+    <li><span class="num">3</span><span class="title">Page-by-Page Description</span></li>
+    <li class="sub"><span class="num">3.1</span><span class="title">index.php — Main Route Viewer</span></li>
+    <li class="sub"><span class="num">3.2</span><span class="title">customers.php — All Customers Map</span></li>
+    <li class="sub"><span class="num">3.3</span><span class="title">customer.php — Single Customer Details</span></li>
+    <li class="sub"><span class="num">3.4</span><span class="title">compare.php — Multi-Distributor Comparison</span></li>
+    <li class="sub"><span class="num">3.5</span><span class="title">report.php — Printable Route Report</span></li>
+    <li class="sub"><span class="num">3.6</span><span class="title">report-anomalies.php — Printable Anomaly Report</span></li>
+    <li><span class="num">4</span><span class="title">API Endpoint Reference</span></li>
+    <li><span class="num">5</span><span class="title">Data Pipeline</span></li>
+    <li><span class="num">6</span><span class="title">Security &amp; Database Access</span></li>
+    <li><span class="num">7</span><span class="title">Frontend Techniques</span></li>
+    <li><span class="num">8</span><span class="title">Data Findings</span></li>
+    <li><span class="num">9</span><span class="title">Deployment Details</span></li>
+    <li><span class="num">10</span><span class="title">What the Application Does NOT Do</span></li>
+    <li><span class="num">11</span><span class="title">Recommended Next Steps</span></li>
+    <li><span class="num">12</span><span class="title">Feature Inventory</span></li>
+  </ul>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  1. OVERVIEW                                               -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">01</span> Overview</h2>
+
+  <p><b>Name:</b> Alameen Distributor Tracker</p>
+  <p><b>Purpose:</b> A read-only web dashboard that visualizes the GPS routes, customer visits, and behavioral patterns of distributors (salesmen) working with the Alameen Accounting &amp; Distribution system.</p>
+  <p><b>Deployment:</b> Runs on a Windows Server alongside the Alameen application (which runs on IIS). The tracker runs on Apache (XAMPP) on port <code>8081</code>, coexisting peacefully with the accounting system on port <code>80</code>.</p>
+  <p><b>Access:</b> Local (<code>http://127.0.0.1:8081/alameengeo/public/</code>) and remote (via Cloudflare Tunnel).</p>
+  <p><b>Languages:</b> Arabic (RTL, default) + English (LTR).</p>
+  <p><b>Theme:</b> Dark (default) + Light, with shared preference across pages.</p>
+
+  <div class="callout info">
+    <span class="icon">ℹ️</span>
+    <div><b>Core principle:</b> The application is strictly read-only against the production database. Every query is a <code>SELECT</code>. No tables are created, altered, or dropped. No rows are inserted, updated, or deleted.</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  2. ARCHITECTURE                                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">02</span> Architecture</h2>
+
+  <div class="diagram">┌─────────────────────────────────────────────────────────┐
+│  Browser                                                │
+│  ├─ index.php       (routes + playback + analytics)     │
+│  ├─ customers.php   (all-customer map)                  │
+│  ├─ customer.php    (single customer details)           │
+│  ├─ compare.php     (multi-distributor overlay)         │
+│  ├─ report.php      (printable route report)            │
+│  └─ report-anomalies.php (printable anomaly report)     │
+└─────────────────────────────────────────────────────────┘
+                          │ fetch()
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│  Apache + PHP 8 (XAMPP, port 8081)                      │
+│  ├─ api/distributors.php    → list of distributors      │
+│  ├─ api/coverage.php        → system-wide stats         │
+│  ├─ api/route.php           → GPS points + day stats    │
+│  ├─ api/visits.php          → visits + coordinates      │
+│  ├─ api/customers-map.php   → all customer locations    │
+│  ├─ api/coverage-grid.php   → territory grid            │
+│  └─ api/anomalies.php       → anomaly detection         │
+└─────────────────────────────────────────────────────────┘
+                          │ PDO sqlsrv
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│  SQL Server Enterprise 16.0 (same physical machine)     │
+│  Login: alameengeo_reader (READ-ONLY)                   │
+│  Database: AmnDb006                                     │
+│  Tables used: cu000, Distributor000, DistTr000,         │
+│  DistVi000, DistLocationLog000, DistCustUpdates000,     │
+│  DistDeviceCustAddress000, CustAddress000               │
+└─────────────────────────────────────────────────────────┘</div>
+
+  <p><b>Frontend stack:</b> Vanilla JavaScript + Leaflet 1.9.4 + Leaflet.markercluster + leaflet.heat. No frameworks, no build step, no npm. Everything runs directly from static files.</p>
+
+  <p><b>Backend stack:</b> PHP 8 with <code>pdo_sqlsrv</code> extension, forcing ODBC Driver 18 for Unicode-safe Arabic handling.</p>
+
+  <p><b>Database access:</b> Dedicated read-only login <code>alameengeo_reader</code> with <code>db_datareader</code> role and explicit <code>DENY</code> on INSERT / UPDATE / DELETE / ALTER / CREATE TABLE / EXECUTE.</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  3. PAGES                                                  -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">03</span> Page-by-Page Description</h2>
+
+  <h3>3.1 — index.php (Main Route Viewer)</h3>
+  <p><b>The most complex page.</b> Combines the route map, playback animation, analytics, and controls.</p>
+
+  <h4>Topbar (fixed, safe-area aware)</h4>
+  <ul>
+    <li>🚚 Logo + app title</li>
+    <li>📊 Link to <code>compare.php</code> (multi-distributor comparison)</li>
+    <li>🖨️ Button to open <code>report.php</code> (route report) — opens in new tab with current filters</li>
+    <li>⚠️ Button to open <code>report-anomalies.php</code> — <b>visible only when anomalies are detected</b></li>
+    <li>🔗 Button to copy shareable URL to clipboard (URL encodes all filters)</li>
+    <li>☀️ / 🌙 Theme toggle (dark/light)</li>
+    <li>🌐 Language toggle (AR/EN)</li>
+  </ul>
+
+  <h4>Sidebar panels (top to bottom)</h4>
+
+  <p><b>1. Coverage banner</b> — system-wide status. Shows total GPS points, working/total distributors, date range of all data, and a warning if no new GPS has arrived in &gt;14 days.</p>
+
+  <p><b>2. Filter form:</b></p>
+  <ul>
+    <li>Distributor dropdown (all 10 from <code>Distributor000</code>)</li>
+    <li>From / To dates (native picker opens on click anywhere in input)</li>
+    <li>Toggle checkboxes: <b>Route</b>, <b>Visits</b>, <b>Heat map</b>, <b>Coverage</b>, <b>Anomalies</b></li>
+    <li><b>Load</b> button (also triggered by Enter in the form)</li>
+    <li><b>Reset</b> button (clears everything except language preference)</li>
+  </ul>
+
+  <p><b>3. Playback panel</b> (appears after a route loads):</p>
+  <ul>
+    <li>Play/Pause button</li>
+    <li>Slider to scrub through the route</li>
+    <li>Live clock (HH:MM)</li>
+    <li>Progress counter (X / Y)</li>
+    <li>Speed selector (0.5× / 1× / 2× / 4× / 8×)</li>
+    <li>"Reveal visits as time advances" toggle</li>
+  </ul>
+
+  <p><b>4. Stats panel:</b> GPS points, distance (km), days, visits, visits on map, customer GPS count. Warnings appear for empty ranges, thinned routes, and missing coordinates.</p>
+
+  <p><b>5. Days table</b> (clickable):</p>
+  <ul>
+    <li>One row per day with a color swatch, date, point count, km, and visit count</li>
+    <li>Click a row → map zooms to that day's bounds</li>
+    <li>Toast shows the day's full summary</li>
+  </ul>
+
+  <p><b>6. Anomaly panel</b> (appears when toggle is on):</p>
+  <ul>
+    <li>🔄 Rescan button</li>
+    <li>One row per anomaly with type icon, date/time, duration, nearest customer</li>
+    <li>Click a row → map zooms + crosshair + popup</li>
+  </ul>
+
+  <p><b>7. Visits panel</b> (always present, has search):</p>
+  <ul>
+    <li>Live search box filtering by customer name, time, trip, state, source</li>
+    <li>Count shows <code>filtered / total</code> when a filter is active</li>
+    <li>Each row shows customer name + time + <code>(approx)</code> or <code>(no GPS)</code> tag</li>
+    <li>Click → zoom + crosshair + popup, or open <code>customer.php</code> if no GPS</li>
+  </ul>
+
+  <h4>Map layers (bottom to top)</h4>
+  <ul>
+    <li>OSM base tiles</li>
+    <li>Route polylines — <b>one color per calendar day</b> so multi-day ranges don't cross-cut</li>
+    <li>Start marker (green) and End marker (red) for the full range</li>
+    <li>Heat layer (optional, log-scale colored)</li>
+    <li>Coverage canvas layer (optional, grid cells)</li>
+    <li>Visit markers — clustered when zoomed out, individual when zoomed in (purple = stored customer GPS, orange = derived from nearest route point)</li>
+    <li>Anomaly markers (red <code>?</code> = unknown stop, amber <code>⏸</code> = long idle, purple <code>▶</code> = far start)</li>
+    <li>Playback vehicle (🚚 pulsing amber circle)</li>
+    <li>Selection crosshair (red pulsing ring + 4 arms)</li>
+  </ul>
+
+  <h4>Smart behaviors</h4>
+  <ul>
+    <li><b>Decimation:</b> if a range has &gt;5,000 points, every Nth point is sent to keep the map smooth. Distance and stats are still computed on the <b>full</b> dataset server-side.</li>
+    <li><b>Persistent state:</b> distributor, dates, and toggles are saved to <code>localStorage</code> and restored on return. If a valid state exists, the app <b>auto-loads</b>.</li>
+    <li><b>URL state:</b> all filters are reflected in the URL. The 🔗 button copies it.</li>
+    <li><b>Day-boundary safety:</b> distance uses SQL <code>LAG</code> partitioned per day, so overnight gaps between dates never get counted.</li>
+    <li><b>(0,0) rejection:</b> any coordinate that resolves to exactly zero latitude AND zero longitude is filtered out.</li>
+  </ul>
+</section>
+
+<section class="page">
+  <h3>3.2 — customers.php (All Customers Map)</h3>
+  <p><b>Purpose:</b> Show every customer with a usable location on one map.</p>
+  <p><b>How it works:</b> The API derives coordinates from the customer's <b>most recent visit</b> and finds the nearest route GPS ping within ±15 minutes. This yields <b>185 customers</b> even though the database has zero stored customer GPS.</p>
+
+  <h4>Layout</h4>
+  <ul>
+    <li>Sidebar with distributor filter, search input, and count display</li>
+    <li>Map with clustered markers (blue dots; clusters turn amber &gt;20, red &gt;100)</li>
+    <li>Click a marker → popup with name, last visit time, visit count, distributor, and "View details →" link to <code>customer.php</code></li>
+    <li>Click a sidebar item → map zooms + red crosshair + popup opens</li>
+  </ul>
+
+  <p><b>Caching:</b> The API caches to <code>public/cache/customers-map.json</code> for 1 hour. 🔄 button forces refresh.</p>
+
+  <h3>3.3 — customer.php (Single Customer Details)</h3>
+  <p><b>Purpose:</b> Full details of one customer, including visit history.</p>
+  <p><b>Intentionally light-themed</b> — this page is meant for reading and printing, not for map work.</p>
+
+  <h4>Header</h4>
+  <p>Back button, customer name + number, language toggle.</p>
+
+  <h4>Panels</h4>
+  <ul>
+    <li><b>Financial Summary:</b> Debit, Credit, <b>Balance</b> (= Debit − Credit, color-coded red/green/gray), MaxDebit, Warn threshold</li>
+    <li><b>Contact Information:</b> Phone1, Phone2, Mobile, FAX (all clickable <code>tel:</code> links), Email (<code>mailto:</code>)</li>
+    <li><b>Distribution Settings:</b> Force visit start with barcode, Force visit end with barcode — each shown as a green "Enabled", grey "Disabled", or dim "N/A" badge depending on the source table</li>
+    <li><b>Visit History:</b> Last 50 visits with trip number, date, start time, finish time, computed duration, distributor name, and state badge</li>
+    <li><b>Notes:</b> Free-text with preserved line breaks</li>
+  </ul>
+
+  <p><b>Defensive schema detection:</b> Every column is checked against <code>INFORMATION_SCHEMA.COLUMNS</code> before being queried. Missing columns show <code>—</code> instead of crashing.</p>
+  <p><b>Responsive:</b> 2-column grid on desktop, single column on phone. Visit table becomes stacked cards under 560px.</p>
+
+  <h3>3.4 — compare.php (Multi-Distributor Comparison)</h3>
+  <p><b>Purpose:</b> Overlay routes from multiple distributors on one map for strategic comparison.</p>
+
+  <h4>Layout</h4>
+  <ul>
+    <li>Sidebar: date range, distributor checkbox list (with color swatches), <b>All</b> / <b>Clear</b> buttons, Load button, Summary panel</li>
+    <li>Map: one polyline per distributor in a distinct color, start/end markers per distributor</li>
+  </ul>
+
+  <p><b>Each distributor gets a fixed color</b> from a 12-color palette, so re-selecting them produces the same color every time.</p>
+  <p><b>Summary cards</b> below the list show per-distributor points, km, and days. Click a card → map zooms to that distributor's route.</p>
+
+  <h3>3.5 — report.php (Printable Route Report)</h3>
+  <p><b>Purpose:</b> A clean A4 print/PDF report of a distributor's route over a date range.</p>
+  <p><b>Server-side PHP header</b> renders the distributor name, dates, and generation timestamp.</p>
+  <p><b>JavaScript</b> fetches <code>api/route.php</code> and <code>api/visits.php</code> and renders:</p>
+  <ul>
+    <li>4 stat cards (GPS points, distance, days, visits)</li>
+    <li>Per-day breakdown table (date, points, km, visits)</li>
+    <li>Full visit log (time, customer, trip, state)</li>
+  </ul>
+  <p><b>Print button</b> (fixed top-right) triggers the browser print dialog. Print CSS hides the toolbar, tightens spacing, and prevents section splits across pages.</p>
+  <p><b>Arabic RTL</b> fully supported — the entire report flips.</p>
+
+  <h3>3.6 — report-anomalies.php (Printable Anomaly Report)</h3>
+  <p><b>Purpose:</b> A formal, printable report of all anomalies detected in a period.</p>
+
+  <h4>Content</h4>
+  <ul>
+    <li>4 stat cards (total, unknown stops, long idles, far starts) with colored top borders</li>
+    <li>Amber warning banner explaining the report's purpose (investigation aid, not a verdict)</li>
+    <li>One section per anomaly type, each with a <b>count pill</b></li>
+    <li>Row format: date, time range, duration, nearest customer, distance, coordinates</li>
+  </ul>
+
+  <p><b>Sections appear conditionally</b> — if there are zero unknown stops but 5 long idles, only the idle section renders.</p>
+  <p><b>If there are no anomalies</b>, a green "no anomalies detected" card is shown instead.</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  4. API REFERENCE                                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">04</span> API Endpoint Reference</h2>
+
+  <table>
+    <thead>
+      <tr><th>Endpoint</th><th>Method</th><th>Key Params</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>api/distributors.php</code></td><td>GET</td><td>—</td><td>List all 10 distributors</td></tr>
+      <tr><td><code>api/coverage.php</code></td><td>GET</td><td>—</td><td>System-wide GPS stats + per-distributor counts</td></tr>
+      <tr><td><code>api/route.php</code></td><td>GET</td><td>distributor, from, to, target</td><td>GPS points + accurate per-day stats</td></tr>
+      <tr><td><code>api/visits.php</code></td><td>GET</td><td>distributor, from, to</td><td>Visits with coordinates (2-tier resolution)</td></tr>
+      <tr><td><code>api/customers-map.php</code></td><td>GET</td><td>distributor, refresh</td><td>All customers with derived coordinates</td></tr>
+      <tr><td><code>api/coverage-grid.php</code></td><td>GET</td><td>distributor, from, to, cell</td><td>Grid cells with point counts</td></tr>
+      <tr><td><code>api/anomalies.php</code></td><td>GET</td><td>distributor, from, to, thresholds</td><td>Anomalies across 3 rules</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout success">
+    <span class="icon">✅</span>
+    <div><b>All endpoints are SELECT-only.</b> They write cache files to <code>public/cache/</code> (JSON), never to the database.</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  5. DATA PIPELINE                                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">05</span> Data Pipeline</h2>
+
+  <h3>5.1 — GPS Storage</h3>
+  <p>All GPS data lives in <b><code>DistLocationLog000</code></b>:</p>
+  <ul>
+    <li><code>DistributorGUID</code> — links to a distributor</li>
+    <li><code>[Date]</code> — a UTC timestamp (Syria is UTC+3)</li>
+    <li><code>Lat</code> — latitude</li>
+    <li><code>Lon</code> — longitude</li>
+  </ul>
+
+  <h3>5.2 — Customer Visits</h3>
+  <p><code>DistVi000</code> (visits) links to <code>DistTr000</code> (trips) via <code>TripGUID</code>, and to <code>cu000</code> (customers) via <code>CustomerGUID</code>. Each visit has:</p>
+  <ul>
+    <li><code>StartTime</code> / <code>FinishTime</code></li>
+    <li><code>State</code> (0 = open, 2 = completed)</li>
+    <li>No coordinates of its own</li>
+  </ul>
+
+  <h3>5.3 — Coordinate Resolution for Visits</h3>
+  <p>Since stored customer GPS is <b>all placeholders (zeros)</b> in every candidate table (<code>DistCustUpdates000</code>, <code>CustAddress000</code>, <code>DistDeviceCustAddress000</code>), the tracker uses a <b>fallback strategy</b>:</p>
+  <ol>
+    <li><b>Stored customer GPS</b> — if a non-zero value exists (rare)</li>
+    <li><b>Nearest route point within ±15 minutes</b> of the visit's <code>StartTime</code> — this is almost always where the salesman physically was at that moment</li>
+    <li><b>NULL</b> — if neither works, the visit appears in the list but has no map marker</li>
+  </ol>
+  <p>This gives us <b>185 usable customer locations</b> even with zero stored GPS.</p>
+
+  <h3>5.4 — Distance Calculation</h3>
+  <p>Distance is computed <b>server-side</b> in SQL using the <b>haversine formula</b> with a <code>LAG()</code> window function partitioned by calendar day. This ensures:</p>
+  <ul>
+    <li>Overnight jumps between dates are <b>not</b> counted</li>
+    <li>Thinned/decimated points still report <b>accurate</b> total distance</li>
+    <li>A 30-day range returns exact km, not the sum of a decimated subset</li>
+  </ul>
+
+  <h3>5.5 — Anomaly Rules</h3>
+  <p><b>Unknown stops:</b> Any cluster of GPS points within 150m of each other lasting ≥20 minutes, <b>not</b> overlapping a registered visit (±5 min tolerance), and <b>not</b> within 300m of any known customer location.</p>
+  <p><b>Long idles:</b> Same as above, but ≥60 minutes and starting between 08:00 and 18:00 local.</p>
+  <p><b>Far starts:</b> First GPS ping of each calendar day located &gt;15 km from the distributor's centroid (average of all their points in the range).</p>
+  <p>All thresholds are exposed as URL parameters and cached per-distributor-per-date-range for 15 minutes.</p>
+
+  <h3>5.6 — Territory Coverage Grid</h3>
+  <p>Points are bucketed into cells of <b>200m × 200m</b> (adjustable via <code>?cell=</code>). Each cell stores a count. The map renders them on a <b>single canvas</b> with log-scale coloring:</p>
+  <p><code>#e0f2fe</code> (few) → <code>#7dd3fc</code> → <code>#3b82f6</code> → <code>#10b981</code> → <code>#f59e0b</code> → <code>#ef4444</code> (many)</p>
+  <p>Log scale is critical — without it, the occasional hotspot would drown out the everyday usage patterns.</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  6. SECURITY                                               -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">06</span> Security &amp; Database Access</h2>
+
+  <h3>Read-Only User</h3>
+<pre><code>CREATE LOGIN alameengeo_reader WITH PASSWORD = '...';
+CREATE USER alameengeo_reader FOR LOGIN alameengeo_reader;
+ALTER ROLE db_datareader ADD MEMBER alameengeo_reader;
+DENY INSERT, UPDATE, DELETE TO alameengeo_reader;
+DENY ALTER, CREATE TABLE       TO alameengeo_reader;
+DENY EXECUTE                   TO alameengeo_reader;</code></pre>
+
+  <div class="callout success">
+    <span class="icon">🔒</span>
+    <div><b>Effect:</b> Even if a bug or injection attempt tried to modify data, SQL Server would reject it at the permission layer.</div>
+  </div>
+
+  <h3>Connection Strategy</h3>
+  <p><code>app/Database.php</code> tries 4 connection paths in order:</p>
+  <ol>
+    <li><code>sqlsrv</code> with <b>explicit Driver 18</b> (Unicode-safe, preferred)</li>
+    <li><code>sqlsrv</code> with auto-detected driver</li>
+    <li>Generic <code>odbc</code> with Driver 18 (fallback — logs a warning)</li>
+    <li>Generic <code>odbc</code> with Driver 17 (last resort)</li>
+  </ol>
+  <p>Attempt 1 always wins on this environment, which is why Arabic text comes out perfectly.</p>
+
+  <h3>UTF-8 Encoding</h3>
+  <p>PDO is created with <code>PDO::SQLSRV_ATTR_ENCODING =&gt; PDO::SQLSRV_ENCODING_UTF8</code> on <code>sqlsrv</code> connections. This is what makes Arabic customer names appear correctly in the browser, JSON, and print reports.</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  7. FRONTEND TECHNIQUES                                    -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">07</span> Frontend Techniques</h2>
+
+  <p><b>Coordinate swap switches</b> (<code>SWAP_ROUTE</code>, <code>SWAP_VISIT</code>) — top-level constants. Flipping them swaps lat/lon interpretation if a data source ever reports them inverted.</p>
+
+  <p><b>Native date picker on click</b> — <code>input.showPicker()</code> is called on click event so the calendar opens even if the user clicks the middle of the field.</p>
+
+  <p><b>Anti-flash theme script</b> — runs inline in <code>&lt;head&gt;</code> before CSS loads, reads <code>localStorage.alameen_theme</code>, and sets <code>html[data-theme]</code> synchronously. No theme flicker.</p>
+
+  <p><b>Error boundary</b> — a top-level IIFE installs <code>window.onerror</code> and <code>window.onunhandledrejection</code> handlers. Any uncaught error shows a friendly overlay with Copy / Dismiss / Reload options. Browser extension errors are silently ignored.</p>
+
+  <p><b>Toast notifications</b> — a small queued notification system with 4 types (success, info, warning, error) and a shrinking progress bar. Used for intentional user feedback (load complete, copy link, filters cleared).</p>
+
+  <p><b>Canvas coverage layer</b> — thousands of grid cells are drawn in a single canvas element (not thousands of Leaflet rectangles) for smooth panning and zooming.</p>
+
+  <p><b>URL state</b> — <code>history.replaceState</code> updates the URL silently as filters change. Reloading the page or sharing the URL restores the exact view.</p>
+
+  <p><b>localStorage persistence</b> — filters, toggles, theme, and language persist across sessions.</p>
+
+  <p><b>RTL handling</b> — <code>html[dir="rtl"]</code> flips the entire layout, mirrors the back arrow, and reverses progress bar direction. All Arabic translations use correct Cairo font rendering.</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  8. DATA FINDINGS                                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">08</span> Data Findings</h2>
+
+  <p>These are important operational facts uncovered during development:</p>
+
+  <div class="stats-grid">
+    <div class="stat-card red">
+      <div class="label">Distributors with GPS</div>
+      <div class="value">4 / 10</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="label">Last GPS ping</div>
+      <div class="value" style="font-size:15px">2026-06-06</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="label">Top distributor</div>
+      <div class="value">9,586 pts</div>
+    </div>
+    <div class="stat-card green">
+      <div class="label">Derived customers</div>
+      <div class="value">185</div>
+    </div>
+  </div>
+
+  <ul>
+    <li><b>Only 4 of 10 distributors ever sent GPS data.</b> Six devices show zero points.</li>
+    <li><b>The last GPS ping in the entire database is <code>2026-06-06 12:47:58</code>.</b> GPS collection has been offline for over 3 months, yet visits and trips continue.</li>
+    <li><b>Distributor "المندوب مجد" is the only heavy user</b> with 9,586 points over 56 days (April 11 – June 6, 2026). Others have 13, 161, or 265 points.</li>
+    <li><b>All stored customer GPS sources are placeholders</b> — <code>DistCustUpdates000</code>, <code>CustAddress000</code>, and <code>DistDeviceCustAddress000</code> all return zero or null for coordinates.</li>
+    <li><b>185 customers can be derived</b> from route-proximity analysis — the map's data source.</li>
+    <li><b>GPS cadence is roughly one point every 3 minutes</b>, which is why route lines cut across streets in the visual — a known trade-off, not a bug.</li>
+  </ul>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  9. DEPLOYMENT                                             -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">09</span> Deployment Details</h2>
+
+  <table>
+    <tbody>
+      <tr><td><b>Web server</b></td><td>Apache (XAMPP) on port <b>8081</b></td></tr>
+      <tr><td><b>Accounting system</b></td><td>IIS on port <b>80</b> (untouched)</td></tr>
+      <tr><td><b>Database</b></td><td>SQL Server Enterprise 16.0.1200.5</td></tr>
+      <tr><td><b>Database name</b></td><td><code>AmnDb006</code></td></tr>
+      <tr><td><b>DB user</b></td><td><code>alameengeo_reader</code> (read-only)</td></tr>
+      <tr><td><b>Physical path</b></td><td><code>G:\XAMPP\htdocs\alameengeo\</code></td></tr>
+      <tr><td><b>Public URL</b></td><td><code>http://127.0.0.1:8081/alameengeo/public/</code></td></tr>
+      <tr><td><b>External URL</b></td><td>Cloudflare Tunnel</td></tr>
+      <tr><td><b>Vendor files</b></td><td><code>public/vendor/</code> — self-hosted, no CDN</td></tr>
+      <tr><td><b>Cache directory</b></td><td><code>public/cache/</code> — JSON responses</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  10. NOT                                                    -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">10</span> What the Application Does NOT Do</h2>
+
+  <p>To set expectations clearly:</p>
+
+  <ul>
+    <li><b>No writes to the Alameen database.</b> Zero INSERT, UPDATE, DELETE, ALTER.</li>
+    <li><b>No scheduled background jobs.</b> Everything runs on-demand from the browser.</li>
+    <li><b>No authentication layer of its own.</b> It relies on network-level access control (local network + Cloudflare tunnel). If you ever expose it publicly without protection, add Cloudflare Access or basic auth.</li>
+    <li><b>No real-time updates.</b> The map reflects whatever is in the database at the moment you click Load. Refresh to see newer data.</li>
+    <li><b>No tax/accounting computations.</b> Financial figures come directly from <code>cu000</code> and are displayed as stored.</li>
+  </ul>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  11. NEXT STEPS                                             -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">11</span> Recommended Next Steps</h2>
+
+  <p>If you ever want to continue:</p>
+
+  <ol>
+    <li><b>Enable Apache gzip + browser caching</b> — 2 minutes, biggest perf win available.</li>
+    <li><b>Investigate why GPS stopped on 2026-06-06</b> — the vendor report is drafted, just needs sending.</li>
+    <li><b>Backfill customer coordinates</b> into a separate cache table (outside the Alameen DB) — future visits would always show precise markers.</li>
+    <li><b>Add a compare.php variant that shows all 10 distributors</b> at once — the code already supports it.</li>
+    <li><b>Add a heatmap-by-hour filter</b> — a slider that only shows GPS points for a specific time-of-day range.</li>
+    <li><b>Wrap the whole app in a PWA</b> — installable on a phone home screen with offline shell caching.</li>
+  </ol>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  12. FEATURE INVENTORY                                     -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2 class="section"><span class="num">12</span> Feature Inventory</h2>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Feature</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Error Boundary</td><td>✅</td></tr>
+      <tr><td>2</td><td>Toast Notifications</td><td>✅</td></tr>
+      <tr><td>3</td><td>Per-Day Stats Table</td><td>✅</td></tr>
+      <tr><td>4</td><td>Smart Search Bar</td><td>✅</td></tr>
+      <tr><td>5</td><td>Persistent URL State</td><td>✅</td></tr>
+      <tr><td>6</td><td>Dark / Light Mode Toggle</td><td>✅</td></tr>
+      <tr><td>7</td><td>Print Report Page</td><td>✅</td></tr>
+      <tr><td>8</td><td>Anomaly Detection</td><td>✅</td></tr>
+      <tr><td>9</td><td>Territory Coverage Overlay</td><td>✅</td></tr>
+      <tr><td>10</td><td>Multi-Distributor Comparison</td><td>✅</td></tr>
+      <tr><td>11</td><td>Anomaly Report</td><td>✅</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Core capabilities delivered</h3>
+  <ul class="feature-list">
+    <li>Live route map with playback</li>
+    <li>Coverage analysis with grid overlay</li>
+    <li>Anomaly detection (3 rules)</li>
+    <li>Multi-distributor comparison</li>
+    <li>Two printable reports</li>
+    <li>Full Arabic RTL + English</li>
+    <li>Dark + light theme</li>
+    <li>Read-only database access</li>
+    <li>Cache layer (1-hour, 15-min)</li>
+    <li>Decimation for long ranges</li>
+    <li>Smart search bar</li>
+    <li>Persistent URL state</li>
+    <li>Error boundary with Copy / Reload</li>
+    <li>Toast notifications</li>
+    <li>Responsive sidebar drawer</li>
+    <li>Safe-area for notched phones</li>
+  </ul>
+
+  <!-- <div class="footer-note">
+    <div class="big">You built this from scratch.</div>
+    On top of an undocumented, 950-table production database.<br>
+    In less than two weeks.<br><br>
+    <b>That's not a demo. That's a product.</b>
+  </div> -->
+
+  <div class="footer-note">
+    <div class="big">Eng. Fady Alchaar</div>
+  </div>
+</section>
+
+<script>
+  // Fill in the report date
+  document.getElementById('reportDate').textContent =
+    new Date().toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+</script>
+
+</body>
+</html>

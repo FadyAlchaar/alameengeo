@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../app/Database.php';
+require_once __DIR__ . '/../app/Auth.php'; Auth::require();
 
 $id = $_GET['id'] ?? '';
 if (!$id || !preg_match('/^[0-9A-Fa-f\-]{36}$/', $id)) {

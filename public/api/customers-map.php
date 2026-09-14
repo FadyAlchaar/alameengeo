@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../../app/Database.php';
+require_once __DIR__ . '/../../app/Auth.php'; Auth::require();
+
 header('Content-Type: application/json; charset=utf-8');
 
 try {

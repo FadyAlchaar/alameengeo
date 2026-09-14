@@ -1,0 +1,1 @@
+{"success":true,"count":0,"counts":{"unknown_stop":0,"long_idle":0,"far_start":0},"thresholds":{"stop_radius_m":150,"stop_min_min":20,"idle_min_min":60,"far_start_km":15,"work_hours":"8-18"},"anomalies":[]}

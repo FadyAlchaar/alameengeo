@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/../app/Auth.php'; Auth::require(); ?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -1135,8 +1136,177 @@
   .search-box.has-value .clear-btn { display: block; }
   .search-box .clear-btn:hover { color: var(--danger); }
 
-  /* Highlight when a filter is active */
+    /* Highlight when a filter is active */
   .visit-item.filtered-hidden { display: none; }
+</style>
+
+<!-- ═══ ANOMALY CSS (additive, isolated) ═══ -->
+<style id="anomaly-css">
+  .anomaly-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding-inline-end: 4px;
+  }
+  .anomaly-item {
+    background: var(--bg-panel);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 12.5px;
+    cursor: pointer;
+    border-inline-start: 3px solid var(--warning);
+    transition: background .15s, transform .08s;
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+  }
+  .anomaly-item:hover { background: #253046; }
+  .anomaly-item:active { transform: scale(.99); }
+
+  .anomaly-item.type-unknown_stop { border-inline-start-color: #ef4444; }
+  .anomaly-item.type-long_idle    { border-inline-start-color: #f59e0b; }
+  .anomaly-item.type-far_start    { border-inline-start-color: #8b5cf6; }
+
+  .anomaly-icon {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    color: #fff;
+    font-weight: 700;
+  }
+  .type-unknown_stop .anomaly-icon { background: #ef4444; }
+  .type-long_idle    .anomaly-icon { background: #f59e0b; }
+  .type-far_start    .anomaly-icon { background: #8b5cf6; }
+
+  .anomaly-body { flex: 1; min-width: 0; }
+  .anomaly-title {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 12.5px;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .anomaly-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+  .anomaly-meta .pill {
+    background: var(--bg-dark);
+    padding: 1px 7px;
+    border-radius: 8px;
+    color: #cbd5e1;
+    font-size: 10.5px;
+  }
+
+  /* Anomaly map markers */
+  .anomaly-marker {
+    background: transparent !important;
+    border: none !important;
+  }
+  .anomaly-marker .anom-dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    color: #fff;
+    font-weight: 700;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.55);
+    animation: anomPulse 2s ease-in-out infinite;
+  }
+  .anomaly-marker.unknown_stop .anom-dot { background: #ef4444; }
+  .anomaly-marker.long_idle    .anom-dot { background: #f59e0b; }
+  .anomaly-marker.far_start    .anom-dot { background: #8b5cf6; }
+
+  @keyframes anomPulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,.55), 0 0 0 0 currentColor; }
+    50%      { box-shadow: 0 2px 8px rgba(0,0,0,.55), 0 0 0 8px transparent; }
+  }
+  .type-unknown_stop .anom-dot { animation-name: anomPulseRed; }
+  @keyframes anomPulseRed {
+    0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,.55), 0 0 0 0 rgba(239,68,68,.5); }
+    50%      { box-shadow: 0 2px 8px rgba(0,0,0,.55), 0 0 0 12px rgba(239,68,68,0); }
+  }
+
+    html[data-theme="light"] .anomaly-item         { background: #f8fafc; border-color: #e2e8f0; }
+  html[data-theme="light"] .anomaly-item:hover   { background: #e2e8f0; }
+  html[data-theme="light"] .anomaly-meta .pill   { background: #e2e8f0; color: #475569; }
+</style>
+
+<!-- ═══ COVERAGE OVERLAY CSS (additive, isolated) ═══ -->
+<style id="coverage-css">
+  .leaflet-coverage-layer {
+    pointer-events: none;
+    z-index: 350;
+  }
+
+  .coverage-legend {
+    position: absolute;
+    inset-inline-end: 18px;
+    bottom: 26px;
+    background: rgba(15, 23, 42, .92);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    z-index: 500;
+    display: none;
+    font-size: 11px;
+    color: var(--text);
+    min-width: 170px;
+  }
+  .coverage-legend.active { display: block; }
+  .coverage-legend .title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text-dim);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .coverage-gradient {
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(90deg,
+      #e0f2fe 0%,
+      #7dd3fc 20%,
+      #3b82f6 40%,
+      #10b981 60%,
+      #f59e0b 80%,
+      #ef4444 100%);
+    margin-bottom: 4px;
+  }
+  .coverage-labels {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-dim);
+    font-size: 10px;
+  }
+  .coverage-stats {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #334155;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .coverage-stats b { color: #60a5fa; }
+
+  html[data-theme="light"] .coverage-legend {
+    background: rgba(255, 255, 255, .96);
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+  html[data-theme="light"] .coverage-legend .title { color: #64748b; }
+  html[data-theme="light"] .coverage-legend .coverage-stats { color: #64748b; border-top-color: #e2e8f0; }
+  html[data-theme="light"] .coverage-legend .coverage-stats b { color: #1d4ed8; }
 </style>
 </head>
 
@@ -1322,6 +1492,22 @@
       <div class="text" data-i18n="appTitle">Alameen Tracker</div>
     </div>
 
+  <a class="tb-btn" href="logout.php" title="Logout" data-i18n-title="logout">
+    <span class="icon">🚪</span>
+  </a>
+
+  <a class="tb-btn" href="compare.php" title="Compare distributors" data-i18n-title="compareBtn">
+    <span class="icon">📊</span>
+  </a>
+
+  <button class="tb-btn" id="reportBtn" title="Print report" data-i18n-title="printReport">
+    <span class="icon">🖨️</span>
+  </button>
+
+  <button class="tb-btn" id="reportAnomalyBtn" title="Anomaly report" data-i18n-title="printAnomalyReport" style="display:none;">
+    <span class="icon">⚠️</span>
+  </button>
+
   <button class="tb-btn" id="copyLinkBtn" title="Copy shareable link" data-i18n-title="copyLink">
     <span class="icon">🔗</span>
   </button>
@@ -1370,6 +1556,8 @@
         <label><input type="checkbox" id="showRoute" checked> <span data-i18n="showRoute">Route</span></label>
         <label><input type="checkbox" id="showVisits" checked> <span data-i18n="showVisits">Visits</span></label>
         <label><input type="checkbox" id="showHeat"> <span data-i18n="showHeat">Heat map</span></label>
+        <label><input type="checkbox" id="showCoverage"> <span data-i18n="showCoverage">Coverage</span></label>
+        <label><input type="checkbox" id="showAnomalies"> <span data-i18n="showAnomalies">Anomalies</span></label>
       </div>
 
       <div class="btn-row" style="margin-top:12px">
@@ -1432,6 +1620,25 @@
       </div>
     </div>
 
+    <div class="panel" id="anomalyPanel" style="display:none;">
+      <div class="panel-title">
+        ⚠️ <span data-i18n="anomalies">Anomalies</span>
+        (<span id="anomalyCount">0</span>)
+        <button id="anomalyRefreshBtn" title="Rescan" style="
+          margin-inline-start:auto; background:transparent; border:1px solid var(--border);
+          color:var(--text-dim); border-radius:6px; padding:2px 8px; cursor:pointer;
+          font-family:inherit; font-size:11px;
+        ">🔄</button>
+      </div>
+      <div class="anomaly-list" id="anomalyList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">
+        <span data-i18n="visits">Visits</span> (<span id="visitCount">0</span>)
+      </div>
+      <div class="search-box" id="visitSearchBox">
+
     <div class="panel">
       <div class="panel-title">
         <span data-i18n="visits">Visits</span> (<span id="visitCount">0</span>)
@@ -1460,6 +1667,17 @@
       </div>
     </div>
   </div>
+
+    <div class="coverage-legend" id="coverageLegend">
+      <div class="title" data-i18n="coverageTitle2">Territory Coverage</div>
+      <div class="coverage-gradient"></div>
+      <div class="coverage-labels">
+        <span data-i18n="fewer">Fewer</span>
+        <span data-i18n="more">More</span>
+      </div>
+      <div class="coverage-stats" id="coverageStats"></div>
+    </div>
+
 
   <div id="sideBackdrop"></div>
 </div>
@@ -1571,9 +1789,34 @@ const I18N = {
     toggleTheme:     'Toggle theme',
     darkMode:        'Dark mode',
     lightMode:       'Light mode',
+    printReport:     'Print report',
+    showAnomalies:   'Anomalies',
+    anomalies:       'Anomalies',
+    anomScanning:    'Scanning for anomalies…',
+    anomNone:        'No anomalies detected.',
+    anomUnknown:     'Unknown stop',
+    anomLongIdle:    'Long idle',
+    anomFarStart:    'Far start',
+    anomDur:         'Duration',
+    anomNearest:     'Nearest',
+    anomDist:        'Distance',
+    anomFromCenter:  'From usual area',
+    anomMinutes:     'min',
+    showCoverage:    'Coverage',
+    coverageTitle2:  'Territory Coverage',
+    fewer:           'Fewer',
+    more:            'More',
+    covLoading:      'Computing coverage grid…',
+    covCells:        'grid cells',
+    covPoints:       'points',
+    covCellSize:     'cell size',
+    covNone:         'No coverage data.',
+    compareBtn:      'Compare distributors',
+    printAnomalyReport: 'Anomaly report',
+    logout: 'Logout',
   },
   ar: {
-    appTitle:        'متتبع الموزع',
+    appTitle:        'مسارات التوزيع',
     coverageTitle:   'تغطية البيانات',
     distributor:     'الموزّع / المندوب',
     from:            'من',
@@ -1638,6 +1881,31 @@ const I18N = {
     toggleTheme:     'تبديل المظهر',
     darkMode:        'الوضع الداكن',
     lightMode:       'الوضع الفاتح',
+    printReport:     'طباعة تقرير',
+    showAnomalies:   'الحالات الشاذة',
+    anomalies:       'الحالات الشاذة',
+    anomScanning:    'جارٍ البحث عن الحالات الشاذة…',
+    anomNone:        'لا توجد حالات شاذة.',
+    anomUnknown:     'توقف غير معروف',
+    anomLongIdle:    'توقف طويل',
+    anomFarStart:    'بداية بعيدة',
+    anomDur:         'المدة',
+    anomNearest:     'الأقرب',
+    anomDist:        'المسافة',
+    anomFromCenter:  'عن المنطقة المعتادة',
+    anomMinutes:     'دقيقة',
+    showCoverage:    'التغطية',
+    coverageTitle2:  'تغطية المنطقة',
+    fewer:           'أقل',
+    more:            'أكثر',
+    covLoading:      'جارٍ حساب شبكة التغطية…',
+    covCells:        'خلية',
+    covPoints:       'نقطة',
+    covCellSize:     'حجم الخلية',
+    covNone:         'لا توجد بيانات تغطية.',
+    compareBtn:      'مقارنة الموزعين',
+    printAnomalyReport: 'تقرير الحالات الشاذة',
+    logout: 'تسجيل الخروج',
   },
 };
 
@@ -1667,6 +1935,13 @@ function applyLanguage() {
   if (_vs) _vs.placeholder = t('searchVisits');
   const _tb = document.getElementById('themeBtn');
   if (_tb) _tb.title = t('toggleTheme');
+  const _rb = document.getElementById('reportBtn');
+  if (_rb) _rb.title = t('printReport');
+  const _rab = document.getElementById('reportAnomalyBtn');
+  if (_rab) _rab.title = t('printAnomalyReport');
+  document.querySelectorAll('a[href="compare.php"]').forEach(el => {
+    el.title = t('compareBtn');
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1679,8 +1954,124 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-const routeLayer = L.layerGroup().addTo(map);
-const trailLayer = L.layerGroup().addTo(map);
+const routeLayer   = L.layerGroup().addTo(map);
+const trailLayer   = L.layerGroup().addTo(map);
+const anomalyLayer = L.layerGroup();   // added to map only when toggled
+
+// ═══════════════════════════════════════════════════════════════
+//  COVERAGE CANVAS LAYER
+//  Renders thousands of grid cells on a single canvas for speed.
+// ═══════════════════════════════════════════════════════════════
+const CoverageLayer = L.Layer.extend({
+  initialize(options) {
+    L.setOptions(this, options);
+    this._cells = [];
+    this._max = 0;
+    this._latStep = 0;
+    this._lonStep = 0;
+  },
+
+  onAdd(map) {
+    this._map = map;
+    this._canvas = L.DomUtil.create('canvas', 'leaflet-coverage-layer');
+    this._canvas.style.position = 'absolute';
+    this._ctx = this._canvas.getContext('2d', { willReadFrequently: false });
+    map.getPanes().overlayPane.appendChild(this._canvas);
+    map.on('moveend zoomend resize viewreset', this._reset, this);
+    this._reset();
+  },
+
+  onRemove(map) {
+    map.off('moveend zoomend resize viewreset', this._reset, this);
+    if (this._canvas) this._canvas.remove();
+    this._canvas = null;
+    this._ctx = null;
+  },
+
+  setData(payload) {
+    this._cells    = payload.cells || [];
+    this._max      = payload.max || 0;
+    this._latStep  = payload.latStep || 0;
+    this._lonStep  = payload.lonStep || 0;
+    this._cellSizeM = payload.cellSizeM || 0;
+    if (this._canvas) this._reset();
+  },
+
+  clear() {
+    this._cells = [];
+    this._max = 0;
+    if (this._ctx) this._reset();
+  },
+
+  _reset() {
+    if (!this._map || !this._canvas) return;
+    const size = this._map.getSize();
+    const topLeft = this._map.containerPointToLayerPoint([0, 0]);
+    L.DomUtil.setPosition(this._canvas, topLeft);
+    this._canvas.width  = size.x;
+    this._canvas.height = size.y;
+    this._canvas.style.width  = size.x + 'px';
+    this._canvas.style.height = size.y + 'px';
+    this._draw();
+  },
+
+  _color(count, max) {
+    if (max <= 0) return 'rgba(0,0,0,0)';
+    const ratio = Math.log(1 + count) / Math.log(1 + max);  // 0..1
+    const stops = [
+      [0.00, [224, 242, 254]],  // #e0f2fe
+      [0.20, [125, 211, 252]],  // #7dd3fc
+      [0.40, [ 59, 130, 246]],  // #3b82f6
+      [0.60, [ 16, 185, 129]],  // #10b981
+      [0.80, [245, 158,  11]],  // #f59e0b
+      [1.00, [239,  68,  68]],  // #ef4444
+    ];
+    for (let i = 1; i < stops.length; i++) {
+      if (ratio <= stops[i][0]) {
+        const [r0, g0, b0] = stops[i-1][1];
+        const [r1, g1, b1] = stops[i][1];
+        const p = (ratio - stops[i-1][0]) / (stops[i][0] - stops[i-1][0]);
+        return `rgba(${Math.round(r0 + (r1-r0)*p)},${Math.round(g0 + (g1-g0)*p)},${Math.round(b0 + (b1-b0)*p)},0.55)`;
+      }
+    }
+    return 'rgba(239,68,68,0.55)';
+  },
+
+  _draw() {
+    const ctx = this._ctx;
+    if (!ctx) return;
+    ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    if (!this._cells.length || !this._max) return;
+
+    const map = this._map;
+    const bounds = map.getBounds();
+    const south = bounds.getSouth() - 0.02;
+    const north = bounds.getNorth() + 0.02;
+    const west  = bounds.getWest()  - 0.02;
+    const east  = bounds.getEast()  + 0.02;
+
+    // Sample one pixel-per-cell ratio at current zoom for width calc
+    const sampleLat = (south + north) / 2;
+    const sampleLon = (west  + east ) / 2;
+    const p1 = map.latLngToContainerPoint([sampleLat, sampleLon]);
+    const p2 = map.latLngToContainerPoint([sampleLat + this._latStep, sampleLon + this._lonStep]);
+    const wpx = Math.max(1, Math.abs(p2.x - p1.x));
+    const hpx = Math.max(1, Math.abs(p2.y - p1.y));
+
+    ctx.imageSmoothingEnabled = false;
+
+    for (const [lat, lon, count] of this._cells) {
+      if (lat < south || lat > north || lon < west || lon > east) continue;
+      const pt = map.latLngToContainerPoint([lat, lon]);
+      ctx.fillStyle = this._color(count, this._max);
+      ctx.fillRect(pt.x - wpx/2, pt.y - hpx/2, wpx, hpx);
+    }
+  },
+});
+
+let coverageLayer = new CoverageLayer();
+let currentCoverageData = null;
+
 const visitLayer = L.markerClusterGroup({
   maxClusterRadius: 45,
   showCoverageOnHover: false,
@@ -1940,6 +2331,20 @@ $('themeBtn').addEventListener('click', () => {
   __toast.info(next === 'dark' ? t('darkMode') : t('lightMode'));
 });
 
+// ═══ Print Report ═══
+$('reportBtn').addEventListener('click', () => {
+  const d = $('distributor').value;
+  const f = $('from').value;
+  const t = $('to').value;
+  if (!d || !f || !t) {
+    __toast.warning(LANG === 'ar' ? 'الرجاء اختيار المندوب والتواريخ' : 'Please select distributor and dates');
+    return;
+  }
+  const name = $('distributor').selectedOptions[0]?.textContent || '';
+  const params = new URLSearchParams({ d, f, t, name, lang: LANG });
+  window.open('report.php?' + params.toString(), '_blank');
+});
+
 // ═══════════════════════════════════════════════════════════════
 //  DATE PICKER
 // ═══════════════════════════════════════════════════════════════
@@ -2088,6 +2493,8 @@ $('resetBtn').addEventListener('click', () => {
   $('showRoute').checked  = true;
   $('showVisits').checked = true;
   $('showHeat').checked   = false;
+  $('showCoverage').checked = false;
+  $('showAnomalies').checked = false;
 
   $('stats').innerHTML    = t('noData');
   const _dt2 = $('daysTable'); if (_dt2) _dt2.innerHTML = '';
@@ -2098,6 +2505,8 @@ $('resetBtn').addEventListener('click', () => {
   $('heatLegend').classList.remove('active');
 
   // Clear visit search
+  clearAnomalies();
+  clearCoverage();
   currentVisitList   = [];
   currentVisitFilter = '';
   const _si2 = $('visitSearchInput');
@@ -2167,6 +2576,8 @@ async function load(isAuto) {
   visitLayer.clearLayers();
   if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
   clearCrosshair();
+  clearAnomalies();
+  clearCoverage();
   currentVisitMarkers = {};
   $('visitList').innerHTML   = '';
   const _dt1 = $('daysTable'); if (_dt1) _dt1.innerHTML = '';
@@ -2434,6 +2845,14 @@ async function load(isAuto) {
 
     setupPlayback(routePoints, playbackVisits);
 
+            // Re-scan layers that are on
+    if ($('showAnomalies').checked) {
+      scanAnomalies(false);
+    }
+    if ($('showCoverage').checked) {
+      loadCoverage(false);
+    }
+
     if (isMobile() && document.body.classList.contains('side-open-mobile')) {
       document.body.classList.remove('side-open-mobile');
     }
@@ -2525,6 +2944,296 @@ function applyVisitFilter() {
   const cnt   = $('visitCount');
   if (cnt) cnt.textContent = q ? `${shown} / ${total}` : String(total);
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  ANOMALY DETECTION
+// ═══════════════════════════════════════════════════════════════
+let currentAnomalies   = [];
+let currentAnomalyMarkers = {};
+
+function fmtTimeShort(str) {
+  if (!str) return '';
+  const s = String(str);
+  const time = s.match(/\d{2}:\d{2}/);
+  return time ? time[0] : '';
+}
+
+function fmtDateShort(str) {
+  if (!str) return '';
+  return String(str).slice(0, 10);
+}
+
+function anomalyTitle(a) {
+  if (a.type === 'unknown_stop') return t('anomUnknown');
+  if (a.type === 'long_idle')    return t('anomLongIdle');
+  if (a.type === 'far_start')    return t('anomFarStart');
+  return '—';
+}
+
+function anomalyIcon(a) {
+  if (a.type === 'unknown_stop') return '?';
+  if (a.type === 'long_idle')    return '⏸';
+  if (a.type === 'far_start')    return '▶';
+  return '!';
+}
+
+function anomalyPopupHtml(a) {
+  const date = fmtDateShort(a.start);
+  const t1   = fmtTimeShort(a.start);
+  const t2   = fmtTimeShort(a.end);
+  const title = anomalyTitle(a);
+
+  let lines = `<b>${escapeHtml(title)}</b><div class="popup-meta">${escapeHtml(date)} ${escapeHtml(t1)}${t2 && t2 !== t1 ? ' → ' + escapeHtml(t2) : ''}</div>`;
+
+  if (a.type === 'unknown_stop' || a.type === 'long_idle') {
+    lines += `<div class="popup-meta">⏱ ${a.dur_min} ${escapeHtml(t('anomMinutes'))}</div>`;
+    if (a.nearest) lines += `<div class="popup-meta">📍 ${escapeHtml(t('anomNearest'))}: ${escapeHtml(a.nearest)} (${a.nearest_m}m)</div>`;
+  }
+  if (a.type === 'far_start') {
+    lines += `<div class="popup-meta">📏 ${a.dist_km} km ${escapeHtml(t('anomFromCenter'))}</div>`;
+  }
+  return lines;
+}
+
+function renderAnomalyList() {
+  const box = $('anomalyList');
+  const panel = $('anomalyPanel');
+  $('anomalyCount').textContent = currentAnomalies.length;
+
+  if (currentAnomalies.length === 0) {
+    box.innerHTML = `<div style="color:#94a3b8;font-size:12px;padding:6px">${t('anomNone')}</div>`;
+    panel.style.display = '';
+    return;
+  }
+
+  box.innerHTML = '';
+  currentAnomalies.forEach((a, idx) => {
+    const el = document.createElement('div');
+    el.className = 'anomaly-item type-' + a.type;
+    el.dataset.anomIdx = idx;
+
+    const date = fmtDateShort(a.start);
+    const t1   = fmtTimeShort(a.start);
+    const t2   = fmtTimeShort(a.end);
+
+    let metaExtra = '';
+    if (a.type === 'unknown_stop' || a.type === 'long_idle') {
+      metaExtra = `<span class="pill">⏱ ${a.dur_min} ${t('anomMinutes')}</span>`;
+      if (a.nearest) metaExtra += `<span class="pill">📍 ${escapeHtml(a.nearest)}</span>`;
+    } else if (a.type === 'far_start') {
+      metaExtra = `<span class="pill">📏 ${a.dist_km} km</span>`;
+    }
+
+    el.innerHTML = `
+      <div class="anomaly-icon">${anomalyIcon(a)}</div>
+      <div class="anomaly-body">
+        <span class="anomaly-title">${escapeHtml(anomalyTitle(a))}</span>
+        <div class="anomaly-meta">
+          <span>${escapeHtml(date)} · ${escapeHtml(t1)}${t2 && t2 !== t1 ? ' → ' + escapeHtml(t2) : ''}</span>
+          ${metaExtra}
+        </div>
+      </div>
+    `;
+
+    el.addEventListener('click', () => {
+      map.setView([a.lat, a.lon], 17);
+      showCrosshair(a.lat, a.lon);
+      const m = currentAnomalyMarkers[idx];
+      if (m) m.openPopup();
+      if (isMobile()) document.body.classList.remove('side-open-mobile');
+    });
+
+    box.appendChild(el);
+  });
+  panel.style.display = '';
+}
+
+function renderAnomalyMarkers() {
+  anomalyLayer.clearLayers();
+  currentAnomalyMarkers = {};
+
+  currentAnomalies.forEach((a, idx) => {
+    const marker = L.marker([a.lat, a.lon], {
+      icon: L.divIcon({
+        className: 'anomaly-marker ' + a.type,
+        html: `<div class="anom-dot">${anomalyIcon(a)}</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+      }),
+    }).bindPopup(anomalyPopupHtml(a));
+
+    anomalyLayer.addLayer(marker);
+    currentAnomalyMarkers[idx] = marker;
+  });
+}
+
+async function scanAnomalies(forceRefresh) {
+  const distributor = $('distributor').value;
+  const from = $('from').value;
+  const to   = $('to').value;
+  if (!distributor || !from || !to) return;
+
+  __toast.info(t('anomScanning'));
+
+  try {
+    const qs = new URLSearchParams({ distributor, from, to });
+    if (forceRefresh) qs.set('refresh', '1');
+    const data = await jsonFetch('api/anomalies.php?' + qs.toString());
+
+    currentAnomalies = data.anomalies || [];
+    renderAnomalyMarkers();
+    renderAnomalyList();
+
+    const n = currentAnomalies.length;
+    if (n === 0) {
+      __toast.success(LANG === 'ar' ? 'لم يتم العثور على حالات شاذة' : 'No anomalies detected');
+    } else {
+      __toast.warning(
+        LANG === 'ar'
+          ? `تم العثور على ${n} حالة شاذة`
+          : `Found ${n} anomalies`
+      );
+    }
+
+    // Ensure anomalies are visible after a fresh scan
+    if ($('showAnomalies').checked && !map.hasLayer(anomalyLayer)) {
+      anomalyLayer.addTo(map);
+    }
+    updateAnomalyReportBtn();
+
+  } catch (e) {
+    console.error('[scanAnomalies] failed:', e);
+    __toast.error((LANG === 'ar' ? 'فشل الفحص: ' : 'Scan failed: ') + e.message);
+  }
+}
+
+// ═══ Anomaly Report button ═══
+function updateAnomalyReportBtn() {
+  const btn = $('reportAnomalyBtn');
+  if (!btn) return;
+  btn.style.display = currentAnomalies.length > 0 ? '' : 'none';
+}
+
+$('reportAnomalyBtn').addEventListener('click', () => {
+  const d = $('distributor').value;
+  const f = $('from').value;
+  const t = $('to').value;
+  if (!d || !f || !t) {
+    __toast.warning(LANG === 'ar' ? 'الرجاء اختيار المندوب والتواريخ' : 'Please select distributor and dates');
+    return;
+  }
+  const name = $('distributor').selectedOptions[0]?.textContent || '';
+  const params = new URLSearchParams({ d, f, t, name, lang: LANG });
+  window.open('report-anomalies.php?' + params.toString(), '_blank');
+});
+
+// Clear anomalies when data reloads
+function clearAnomalies() {
+  currentAnomalies = [];
+  currentAnomalyMarkers = {};
+  anomalyLayer.clearLayers();
+  if (map.hasLayer(anomalyLayer)) map.removeLayer(anomalyLayer);
+  const p = $('anomalyPanel');
+  if (p) p.style.display = 'none';
+  const c = $('anomalyCount');
+  if (c) c.textContent = '0';
+  updateAnomalyReportBtn();
+}
+
+// ═══ Event wiring ═══
+$('showAnomalies').addEventListener('change', (e) => {
+  if (e.target.checked) {
+    anomalyLayer.addTo(map);
+    // Auto-scan if we have filters but no data yet
+    if (currentAnomalies.length === 0 && $('distributor').value && $('from').value && $('to').value) {
+      scanAnomalies(false);
+    }
+  } else {
+    if (map.hasLayer(anomalyLayer)) map.removeLayer(anomalyLayer);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  COVERAGE OVERLAY
+// ═══════════════════════════════════════════════════════════════
+function updateCoverageLegend(data) {
+  const legend = $('coverageLegend');
+  if (!legend) return;
+  if (!data || !data.cells || data.cells.length === 0) {
+    legend.classList.remove('active');
+    return;
+  }
+  $('coverageStats').innerHTML =
+    `<b>${data.count}</b> ${t('covCells')} · <b>${data.points}</b> ${t('covPoints')}<br>` +
+    `${t('covCellSize')}: ${data.cellSizeM}m`;
+  legend.classList.add('active');
+}
+
+async function loadCoverage(forceRefresh) {
+  const distributor = $('distributor').value;
+  const from = $('from').value;
+  const to   = $('to').value;
+  if (!distributor || !from || !to) return;
+
+  __toast.info(t('covLoading'));
+
+  try {
+    const qs = new URLSearchParams({ distributor, from, to });
+    if (forceRefresh) qs.set('refresh', '1');
+    const data = await jsonFetch('api/coverage-grid.php?' + qs.toString());
+
+    currentCoverageData = data;
+    coverageLayer.setData(data);
+    updateCoverageLegend(data);
+
+    if (data.cells && data.cells.length > 0) {
+      __toast.success(
+        LANG === 'ar'
+          ? `تم حساب التغطية: ${data.count} خلية`
+          : `Coverage ready: ${data.count} cells`
+      );
+    } else {
+      __toast.warning(t('covNone'));
+    }
+
+    // Make sure the layer is attached if the toggle is on
+    if ($('showCoverage').checked && !map.hasLayer(coverageLayer)) {
+      coverageLayer.addTo(map);
+    }
+
+  } catch (e) {
+    console.error('[loadCoverage] failed:', e);
+    __toast.error((LANG === 'ar' ? 'فشل حساب التغطية: ' : 'Coverage failed: ') + e.message);
+  }
+}
+
+function clearCoverage() {
+  currentCoverageData = null;
+  if (coverageLayer) {
+    coverageLayer.clear();
+    if (map.hasLayer(coverageLayer)) map.removeLayer(coverageLayer);
+  }
+  const legend = $('coverageLegend');
+  if (legend) legend.classList.remove('active');
+}
+
+// ═══ Event wiring ═══
+$('showCoverage').addEventListener('change', (e) => {
+  if (e.target.checked) {
+    coverageLayer.addTo(map);
+    if (!currentCoverageData && $('distributor').value && $('from').value && $('to').value) {
+      loadCoverage(false);
+    } else if (currentCoverageData) {
+      updateCoverageLegend(currentCoverageData);
+    }
+  } else {
+    if (map.hasLayer(coverageLayer)) map.removeLayer(coverageLayer);
+    const legend = $('coverageLegend');
+    if (legend) legend.classList.remove('active');
+  }
+});
+
+$('anomalyRefreshBtn').addEventListener('click', () => scanAnomalies(true));
 
 $('visitSearchInput').addEventListener('input', (e) => {
   currentVisitFilter = e.target.value;
