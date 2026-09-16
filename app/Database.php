@@ -20,17 +20,17 @@ class Database {
     //
     //  DEV (XAMPP on your local PC):
     //      $server   = 'localhost\SQLEXPRESS';
-    //      $database = 'AmnDb006';
+    //      $database = 'AlbassaDB2026';
     //
     //  PRODUCTION (Windows Server + SQL Server Enterprise,
     //              same machine as the working billing app):
     //      $server   = 'localhost';
-    //      $database = 'AmnDb006';
+    //      $database = 'AlbassaDB2026';
     //
     //  If your tracker uses a different DB name on prod, change it.
     // ═══════════════════════════════════════════════════════════
     private const SERVER   = 'localhost\\SQLEXPRESS';        // ← change to 'localhost\SQLEXPRESS' for local XAMPP
-    private const DATABASE = 'AmnDb006';         // ← tracker database name
+    private const DATABASE = 'AlbassaDB2026';         // ← tracker database name
     private const USER     = 'alameengeo_reader';
     private const PASS     = 'P@ssw0rd';         // ← same password as the billing app
     // ═══════════════════════════════════════════════════════════
